@@ -10,7 +10,7 @@ PACMAN_PKGS=(
     imv android-tools raylib decibels
     eza gedit gnome-system-monitor
     gpu-screen-recorder sushi evince
-    zoxide ripgrep fzf cliphist
+    zoxide ripgrep fzf cliphist polkit-gnome
     gnome-calculator gnome-font-viewer        
 )
 
