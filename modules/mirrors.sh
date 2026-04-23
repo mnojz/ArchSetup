@@ -16,7 +16,7 @@ if ask_yes_no "Optimize mirrors now?"; then
 
     log "Updating mirrorlist using rate-mirrors"
 
-    if rate-mirrors --protocol https --latest 20 arch | sudo tee /etc/pacman.d/mirrorlist >/dev/null; then
+    if rate-mirrors arch | sudo tee /etc/pacman.d/mirrorlist >/dev/null; then
         log "Mirrorlist updated successfully"
     else
         log "rate-mirrors failed"

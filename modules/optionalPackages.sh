@@ -3,7 +3,7 @@
 section "Optional packages"
 
 if ask_yes_no "Install optional packages?"; then
-    install_pacman flatpak libreoffice blender kdenlive cava gaphor ghex yazi wine winetricks thefuck freecad
+    install_pacman flatpak libreoffice blender kdenlive cava gaphor ghex yazi wine winetricks thefuck freecad qbittorrent
     install_aur anydesk pamac faker unimatrix peaclock localsend
 else
     log "Skipping optional packages"
