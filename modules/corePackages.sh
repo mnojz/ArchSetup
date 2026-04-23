@@ -18,7 +18,8 @@ AUR_PKGS=(
     helium-browser-bin
     visual-studio-code-bin
     apple-fonts
-    font-noto-cjk    
+    font-noto-cjk
+    qt6ct-kde
 )
 
 install_pacman "${PACMAN_PKGS[@]}"
