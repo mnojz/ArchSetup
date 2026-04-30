@@ -20,6 +20,7 @@ AUR_PKGS=(
     apple-fonts
     font-noto-cjk
     qt6ct-kde
+    darkly-bin
 )
 
 install_pacman "${PACMAN_PKGS[@]}"
