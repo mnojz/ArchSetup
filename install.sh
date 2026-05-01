@@ -9,6 +9,7 @@ source "$SCRIPT_DIR/modules/yayInstall.sh"          # good
 source "$SCRIPT_DIR/modules/mirrors.sh"             # good
 source "$SCRIPT_DIR/modules/systemUpdate.sh"        # good
 source "$SCRIPT_DIR/modules/corePackages.sh"        # good
+source "$SCRIPT_DIR/modules/fixDolphinMIME.sh"      # good
 source "$SCRIPT_DIR/modules/ambxst.sh"              # good
 source "$SCRIPT_DIR/modules/configs.sh"             # good
 source "$SCRIPT_DIR/modules/locals.sh"              # good
