@@ -8,8 +8,8 @@ PACMAN_PKGS=(
     file-roller kdeconnect evtest xorg-xev
     ffmpegthumbnailer resvg nerd-fonts
     imv android-tools raylib decibels
-    eza gedit gnome-system-monitor
-    gpu-screen-recorder sushi evince
+    eza gedit gnome-system-monitor archlinux-xdg-menu
+    gpu-screen-recorder evince kwrite
     zoxide ripgrep fzf cliphist polkit-gnome
     gnome-calculator gnome-font-viewer        
 )
@@ -21,6 +21,7 @@ AUR_PKGS=(
     font-noto-cjk
     qt6ct-kde
     darkly-bin
+    kora-icon-theme
 )
 
 install_pacman "${PACMAN_PKGS[@]}"
