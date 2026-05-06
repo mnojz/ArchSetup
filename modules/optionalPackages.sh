@@ -2,35 +2,22 @@
 
 section "Optional packages"
 
-if ask_yes_no "Install optional packages?"; then
-    install_pacman flatpak libreoffice blender kdenlive cava gaphor ghex yazi wine winetricks thefuck freecad qbittorrent
-    install_aur anydesk pamac faker unimatrix peaclock localsend
+log "useful apps" 
+log "from pacman\n 1. flatpak\n 2. libreoffice\n 3. yazi\n 4. wine\n 5. winetricks\n 6. qbittorrent\n 7. zed"
+log "from AUR\n 1. localsend"
+if ask_yes_no "Install useful packages?"; then
+    install_pacman flatpak libreoffice yazi wine winetricks qbittorrent zed
+    install_aur localsend
 else
-    log "Skipping optional packages"
+    log "Skipping useful packages"
 fi
 
-
-# ========= flatpak =========
-section "Setting up flatpak"
-
-if ask_yes_no "Install Flatpak apps?"; then
-
-    if ! command -v flatpak &>/dev/null; then
-        log "Installing flatpak"
-        sudo pacman -S --needed --noconfirm flatpak
-    else
-        log "flatpak already installed"
-    fi
-
-    log "Adding Flathub remote"
-    flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-
-    log "Installing flatpak apps"
-    flatpak install -y --noninteractive flathub \
-        com.stremio.Stremio \
-        org.gnome.Snapshot \
-        org.gnome.gitlab.YaLTeR.VideoTrimmer || true
-
+log "less useful apps"
+log "from pacman\n 1. blender\n 2. kdenlive\n 3. cava\n 4. gaphor\n 5. ghex\n 6. thefuck\n 7. freecad\n 8. gnome-system-monitor\n 9. gnome-calculator\n 10. gnome-font-viewer\n 11. gnome-software"
+log "from AUR \n 1. anydesk\n 2. faker\n 3. unimatrix\n 4. peaclock"
+if ask_yes_no "Install less useful packages?"; then
+    install_pacman blender kdenlive cava gaphor ghex thefuck freecad gnome-system-monitor gnome-calculator gnome-font-viewer gnome-software
+    install_aur anydesk faker unimatrix peaclock 
 else
-    log "Skipping flatpak setup"
+    log "Skipping less useful packages"
 fi

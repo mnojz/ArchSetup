@@ -15,7 +15,7 @@ ask_yes_no() {
     local default="${2:-y}"   # default = y
     local input=""
 
-    if ! read -r -t 60 -p "$prompt [Y/n]: " input; then
+    if ! read -r -t 30 -p "$prompt [Y/n]: " input; then
         printf '\n'
         input=""
     fi
