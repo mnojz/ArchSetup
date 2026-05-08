@@ -3,10 +3,10 @@
 section "Optional packages"
 
 log "useful apps" 
-log "from pacman\n 1. flatpak\n 2. libreoffice\n 3. yazi\n 4. wine\n 5. winetricks\n 6. qbittorrent\n 7. zed"
+log "from pacman\n 1. flatpak\n 2. libreoffice\n 3. yazi\n 4. wine\n 5. winetricks\n 6. qbittorrent\n 7. zed\n 8. pdfarranger\n 9. mousepad"
 log "from AUR\n 1. localsend"
 if ask_yes_no "Install useful packages?"; then
-    install_pacman flatpak libreoffice yazi wine winetricks qbittorrent zed
+    install_pacman flatpak libreoffice yazi wine winetricks qbittorrent zed pdfarranger mousepad
     install_aur localsend
 else
     log "Skipping useful packages"
