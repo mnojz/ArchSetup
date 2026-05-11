@@ -15,7 +15,7 @@ AUR_PKGS=(
     brave-origin-beta-bin
     visual-studio-code-bin
     apple-fonts pacseek
-    font-noto-cjk darkly-bin
+    font-noto-cjk frameworkintegration darkly-bin
     qt6ct-kde kora-icon-theme
 )
 
