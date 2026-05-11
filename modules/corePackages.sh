@@ -6,9 +6,10 @@ PACMAN_PKGS=(
     fish fastfetch curl wget unzip p7zip polkit-gnome
     bluetui acpi net-tools neovim mpv cliphist fzf
     kdeconnect evtest xorg-xev ripgrep zoxide evince
-    ffmpegthumbnailer resvg nerd-fonts mousepad
-    imv android-tools raylib decibels pdfarranger
-    eza archlinux-xdg-menu gpu-screen-recorder                    
+    ffmpegthumbnailer resvg nerd-fonts mousepad gnome-keyring
+    imv android-tools raylib decibels pdfarranger xdg-user-dirs 
+    eza archlinux-xdg-menu gpu-screen-recorder plymouth 
+    intel-media-driver libva-nvidia-driver libva-utils
 )
 
 AUR_PKGS=(
