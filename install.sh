@@ -18,6 +18,7 @@ source "$SCRIPT_DIR/modules/dotfiles.sh"            # installing dotfiles like m
 source "$SCRIPT_DIR/modules/ytd.sh"                 # install ytd protocol handler
 source "$SCRIPT_DIR/modules/optionalPackages.sh"    # install optional packages
 
+xdg-user-dirs-update
 hyprctl reload
 
 section "Done!"
