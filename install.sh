@@ -17,7 +17,10 @@ source "$SCRIPT_DIR/modules/locals.sh"              # download scripts from my l
 source "$SCRIPT_DIR/modules/dotfiles.sh"            # installing dotfiles like mpv uosc and NvChad
 source "$SCRIPT_DIR/modules/ytd.sh"                 # install ytd protocol handler
 source "$SCRIPT_DIR/modules/optionalPackages.sh"    # install optional packages
+source "$SCRIPT_DIR/modules/changeshell.sh"         # change shell to fish
 source "$SCRIPT_DIR/modules/plymouth.sh"            # install plymouth theme
+source "$SCRIPT_DIR/modules/sddm.sh"                # install SDDM theme and set it as default
+source "$SCRIPT_DIR/modules/cleanup.sh"             # remove conflicting packages
 
 xdg-user-dirs-update
 hyprctl reload

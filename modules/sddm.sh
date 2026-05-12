@@ -2,6 +2,7 @@
 
 section "Installing SDDM"
 
+install_aur sddm-git
 cd /tmp
 git clone --depth 1 https://github.com/Darkkal44/qylock.git
 cd qylock
