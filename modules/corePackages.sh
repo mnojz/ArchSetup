@@ -4,7 +4,7 @@ section "Installing core packages"
 
 PACMAN_PKGS=(
     fish fastfetch curl wget unzip p7zip polkit-gnome
-    bluetui acpi net-tools neovim mpv cliphist fzf
+    bluetui acpi net-tools neovim mpv cliphist fzf rsync
     kdeconnect evtest xorg-xev ripgrep zoxide evince
     ffmpegthumbnailer resvg nerd-fonts mousepad gnome-keyring
     imv android-tools raylib decibels pdfarranger xdg-user-dirs 
