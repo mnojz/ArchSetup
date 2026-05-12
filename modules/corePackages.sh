@@ -9,7 +9,7 @@ PACMAN_PKGS=(
     ffmpegthumbnailer resvg nerd-fonts mousepad gnome-keyring
     imv android-tools raylib decibels pdfarranger xdg-user-dirs 
     eza archlinux-xdg-menu gpu-screen-recorder plymouth 
-    intel-media-driver libva-nvidia-driver libva-utils
+    intel-media-driver libva-nvidia-driver libva-utils starship
 )
 
 AUR_PKGS=(
