@@ -1,19 +1,13 @@
 #!/usr/bin/env bash
 
-section "Installing mpv uosc + NvChad"
+section "Installing all the configs and dotfiles..."
 
-if ask_yes_no "Install mpv uosc and NvChad?"; then
-
-    log "Installing mpv uosc..."
-    bash -c "$(curl -fsSL https://raw.githubusercontent.com/tomasklaen/uosc/HEAD/installers/unix.sh)"
-
-    if [ ! -d "$HOME/.config/nvim" ]; then
-        log "Cloning NvChad..."
-        git clone https://github.com/NvChad/starter ~/.config/nvim
-    else
-        log "nvim config exists, skipping"
-    fi
+if ask_yes_no "Install all dotfiles?"; then
+    cd ~
+    git clone --depth=1 https://github.com/mnojz/dotfiles.git
+    cd dotfiles
+    ./install.sh
 
 else
-    log "Skipping mpv uosc and NvChad"
+    log "Skipping dotfile installation"
 fi

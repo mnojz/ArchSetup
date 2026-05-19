@@ -12,14 +12,10 @@ source "$SCRIPT_DIR/modules/systemUpdate.sh"        # update system
 source "$SCRIPT_DIR/modules/corePackages.sh"        # install core packages for my setup
 source "$SCRIPT_DIR/modules/fixDolphinMIME.sh"      # fix dolphin mimetype issue
 source "$SCRIPT_DIR/modules/ambxst.sh"              # install ambxst shell
-source "$SCRIPT_DIR/modules/configs.sh"             # download the dotfiles from my config repo
-source "$SCRIPT_DIR/modules/locals.sh"              # download scripts from my local repo
 source "$SCRIPT_DIR/modules/dotfiles.sh"            # installing dotfiles like mpv uosc and NvChad
 source "$SCRIPT_DIR/modules/ytd.sh"                 # install ytd protocol handler
 source "$SCRIPT_DIR/modules/optionalPackages.sh"    # install optional packages
 source "$SCRIPT_DIR/modules/changeshell.sh"         # change shell to fish
-source "$SCRIPT_DIR/modules/plymouth.sh"            # install plymouth theme
-source "$SCRIPT_DIR/modules/sddm.sh"                # install SDDM theme and set it as default
 source "$SCRIPT_DIR/modules/cleanup.sh"             # remove conflicting packages
 
 xdg-user-dirs-update
