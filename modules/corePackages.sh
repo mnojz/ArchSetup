@@ -10,6 +10,7 @@ PACMAN_PKGS=(
     imv android-tools raylib decibels pdfarranger xdg-user-dirs 
     eza archlinux-xdg-menu gpu-screen-recorder plymouth ark
     intel-media-driver libva-nvidia-driver libva-utils starship
+    hyprpicker 
 )
 
 AUR_PKGS=(
