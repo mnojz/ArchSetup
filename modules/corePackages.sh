@@ -8,7 +8,7 @@ PACMAN_PKGS=(
     kdeconnect sshfs evtest xorg-xev ripgrep zoxide evince
     ffmpegthumbnailer resvg nerd-fonts mousepad gnome-keyring
     imv android-tools raylib decibels pdfarranger xdg-user-dirs 
-    eza archlinux-xdg-menu gpu-screen-recorder plymouth 
+    eza archlinux-xdg-menu gpu-screen-recorder plymouth ark
     intel-media-driver libva-nvidia-driver libva-utils starship
 )
 
