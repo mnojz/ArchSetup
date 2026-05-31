@@ -4,6 +4,7 @@ section "removing conflicting packages"
 
 yay -Rns --noconfirm --removemake network-manager-applet blueman dunst 
 
+chsh -s /bin/fish $USER
 
 # SDDM configs
 MODULE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

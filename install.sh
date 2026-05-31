@@ -14,8 +14,6 @@ source "$SCRIPT_DIR/modules/fixDolphinMIME.sh"      # fix dolphin mimetype issue
 source "$SCRIPT_DIR/modules/ambxst.sh"              # install ambxst shell
 source "$SCRIPT_DIR/modules/dotfiles.sh"            # installing dotfiles like mpv uosc and NvChad
 source "$SCRIPT_DIR/modules/ytd.sh"                 # install ytd protocol handler
-source "$SCRIPT_DIR/modules/optionalPackages.sh"    # install optional packages
-source "$SCRIPT_DIR/modules/changeshell.sh"         # change shell to fish
 source "$SCRIPT_DIR/modules/cleanup.sh"             # remove conflicting packages
 
 xdg-user-dirs-update
