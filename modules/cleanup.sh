@@ -20,9 +20,8 @@ echo -e "[Theme]\nCurrent=silent" | sudo tee /etc/sddm.conf.d/theme.conf >/dev/n
 
 # ensure theme exists before copying
 if [[ -d /usr/share/sddm/themes/silent ]]; then
-    sudo cp "$MODULE_DIR/assets/metadata.desktop" \
-        /usr/share/sddm/themes/silent/metadata.desktop
-    sudo /usr/share/sddm/themes/silent/change_avatar.sh $USER $MODULE_DIR/assets/.face.icon
+    sudo cp "$MODULE_DIR/assets/metadata.desktop" /usr/share/sddm/themes/silent/metadata.desktop
+    sudo /usr/share/sddm/themes/silent/change_avatar.sh $USER "$MODULE_DIR/assets/.face.icon"
 else
     echo "SDDM silent theme not found. Install sddm-silent-theme first."
 fi
