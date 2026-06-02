@@ -6,6 +6,24 @@ yay -Rns --noconfirm --removemake network-manager-applet blueman dunst
 
 chsh -s /bin/fish $USER
 
+# mkinitcpio
+sudo cp "$MODULE_DIR/assets/mkinitcpio.conf" /etc/mkinitcpio.conf
+
+# systemd-boot loader config
+sudo cp "$MODULE_DIR/assets/loader.conf" /boot/loader/loader.conf
+
+# boot entry (arch.conf contents -> existing entry)
+ENTRY_FILE=$(find /boot/loader/entries -maxdepth 1 -name "*.conf" | head -n1)
+
+if [[ -n "$ENTRY_FILE" ]]; then
+    sudo cp "$MODULE_DIR/assets/arch.conf" "$ENTRY_FILE"
+else
+    echo "No boot entry found in /boot/loader/entries"
+fi
+
+# regenerate initramfs
+sudo mkinitcpio -P
+
 # SDDM configs
 MODULE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
