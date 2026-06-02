@@ -12,13 +12,24 @@ sudo cp "$MODULE_DIR/assets/mkinitcpio.conf" /etc/mkinitcpio.conf
 # systemd-boot loader config
 sudo cp "$MODULE_DIR/assets/loader.conf" /boot/loader/loader.conf
 
-# boot entry (arch.conf contents -> existing entry)
+# boot entry config
 ENTRY_FILE=$(find /boot/loader/entries -maxdepth 1 -name "*.conf" | head -n1)
 
+EXTRA_OPTS=" quiet splash loglevel=3 systemd.show_status=error rd.udev.log_level=3 vt.global_cursor_default=0 nvidia_drm.modeset=1"
+
 if [[ -n "$ENTRY_FILE" ]]; then
-    sudo cp "$MODULE_DIR/assets/arch.conf" "$ENTRY_FILE"
-else
-    echo "No boot entry found in /boot/loader/entries"
+    sudo sed -i "/^options / {
+        s/quiet//g;
+        s/splash//g;
+        s/loglevel=3//g;
+        s/systemd.show_status=error//g;
+        s/rd.udev.log_level=3//g;
+        s/vt.global_cursor_default=0//g;
+        s/nvidia_drm.modeset=1//g;
+        s/[[:space:]]\+/ /g;
+        s/[[:space:]]$//;
+        s/$/ $EXTRA_OPTS/
+    }" "$ENTRY_FILE"
 fi
 
 # regenerate initramfs
