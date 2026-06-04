@@ -12,6 +12,9 @@ sudo cp "$MODULE_DIR/assets/mkinitcpio.conf" /etc/mkinitcpio.conf
 # systemd-boot loader config
 sudo cp "$MODULE_DIR/assets/loader.conf" /boot/loader/loader.conf
 
+# sddm override config 
+sudo cp "$MODULE_DIR/assets/override.conf" /etc/systemd/system/sddm.service.d/override.conf
+
 # boot entry config
 ENTRY_FILE=$(find /boot/loader/entries -maxdepth 1 -name "*.conf" | head -n1)
 
