@@ -18,7 +18,7 @@ AUR_PKGS=(
     vscodium-bin
     apple-fonts pacseek peaclock
     frameworkintegration darkly-bin
-    qt6ct-kde kora-icon-theme
+    qt6ct-kde colloid-icon-theme-git
     sddm-silent-theme unimatrix 
 )
 
