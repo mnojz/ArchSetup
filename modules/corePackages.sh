@@ -15,7 +15,7 @@ PACMAN_PKGS=(
 
 AUR_PKGS=(
     brave-origin-bin
-    vscodium-bin
+    vscodium-bin mpv-mpris
     apple-fonts pacseek peaclock
     frameworkintegration darkly-bin
     qt6ct-kde colloid-icon-theme-git
