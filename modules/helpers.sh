@@ -44,29 +44,47 @@ pkg_installed() {
 }
 
 install_pacman() {
+    local failed=()
+
     for pkg in "$@"; do
         if ! pkg_installed "$pkg"; then
             log "Installing $pkg"
             sudo pacman -S --noconfirm --needed "$pkg" || {
                 log "Failed to install $pkg"
-                return 1
+                failed+=("$pkg")
+                continue
             }
         else
             log "$pkg already installed"
         fi
     done
+
+    if [[ ${#failed[@]} -gt 0 ]]; then
+        log "Skipped failed pacman packages: ${failed[*]}"
+    fi
+
+    return 0
 }
 
 install_aur() {
+    local failed=()
+
     for pkg in "$@"; do
         if ! pkg_installed "$pkg"; then
             log "Installing $pkg (AUR)"
             yay -S --noconfirm --needed "$pkg" || {
                 log "Failed to install $pkg from AUR"
-                return 1
+                failed+=("$pkg")
+                continue
             }
         else
             log "$pkg already installed"
         fi
     done
+
+    if [[ ${#failed[@]} -gt 0 ]]; then
+        log "Skipped failed AUR packages: ${failed[*]}"
+    fi
+
+    return 0
 }
