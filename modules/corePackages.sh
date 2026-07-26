@@ -10,13 +10,13 @@ PACMAN_PKGS=(
     imv android-tools raylib decibels pdfarranger xdg-user-dirs libreoffice
     eza archlinux-xdg-menu gpu-screen-recorder plymouth ark pdfarranger 
     intel-media-driver libva-nvidia-driver libva-utils starship man
-    hyprpicker yazi wine winetricks qbittorrent cava gaphor ghex
+    hyprpicker yazi wine winetricks qbittorrent cava gaphor ghex linux-headers
 )
 
 AUR_PKGS=(
     brave-origin-bin
     visual-studio-code-bin mpv-mpris
-    pacseek peaclock
+    pacseek peaclock msi-ec-dkms-git
     frameworkintegration darkly-bin
     qt6ct-kde colloid-icon-theme-git
     sddm-silent-theme unimatrix 
