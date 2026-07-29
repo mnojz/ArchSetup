@@ -32,8 +32,8 @@ chsh -s /bin/fish "$USER"
 # udev rules and power-event 
 # ---------------------------------------------------------------------
 
-sudo cp "$MODULE_DIR/assets/99-msi-ec.rules" /etc/udev/rules.d/99-msi-ec.rules
-sudo cp "$MODULE_DIR/assets/power-event.sh" /usr/local/bin/power-event.sh
+# sudo cp "$MODULE_DIR/assets/99-msi-ec.rules" /etc/udev/rules.d/99-msi-ec.rules
+# sudo cp "$MODULE_DIR/assets/power-event.sh" /usr/local/bin/power-event.sh
 
 # ---------------------------------------------------------------------
 # mkinitcpio
