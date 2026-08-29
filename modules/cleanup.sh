@@ -7,8 +7,8 @@ MODULE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 section "Removing conflicting packages"
 
 REMOVE_PKGS=(
-    network-manager-applet
-    blueman
+    # network-manager-applet
+    # blueman
     dunst
 )
 
@@ -26,7 +26,11 @@ fi
 # Default shell
 # ---------------------------------------------------------------------
 
-chsh -s /bin/fish "$USER"
+# for zsh
+chsh -s $(which zsh) "$USER"
+
+# for fish
+# chsh -s $(which fish) "$USER"
 
 # ---------------------------------------------------------------------
 # udev rules and power-event 

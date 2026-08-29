@@ -3,8 +3,8 @@
 section "Installing core packages"
 
 PACMAN_PKGS=(
-    fish fastfetch curl wget unzip p7zip polkit-gnome gnome-software 
-    bluetui acpi net-tools neovim mpv cliphist fzf rsync mousepad 
+    zsh fastfetch curl wget unzip p7zip polkit-gnome gnome-software 
+    bluetui acpi net-tools neovim mpv cliphist fzf mousepad 
     kdeconnect sshfs evtest xorg-xev ripgrep zoxide evince gnome-calculator
     ffmpegthumbnailer resvg nerd-fonts mousepad gnome-keyring flatpak 
     imv android-tools raylib decibels pdfarranger xdg-user-dirs onlyoffice-bin
@@ -14,7 +14,7 @@ PACMAN_PKGS=(
 )
 
 AUR_PKGS=(
-    brave-origin-bin
+    brave-origin-bin mcontrolcenter-bin
     visual-studio-code-bin mpv-mpris
     pacseek peaclock msi-ec-dkms-git
     frameworkintegration darkly-bin
