@@ -7,7 +7,7 @@ PACMAN_PKGS=(
     bluetui acpi net-tools neovim mpv cliphist fzf mousepad 
     kdeconnect sshfs evtest xorg-xev ripgrep zoxide evince gnome-calculator
     ffmpegthumbnailer resvg nerd-fonts mousepad gnome-keyring flatpak 
-    imv android-tools raylib decibels pdfarranger xdg-user-dirs onlyoffice-bin
+    eog android-tools raylib amberol pdfarranger xdg-user-dirs onlyoffice-bin
     eza archlinux-xdg-menu gpu-screen-recorder plymouth ark pdfarranger 
     intel-media-driver libva-nvidia-driver libva-utils starship man
     hyprpicker yazi wine winetricks qbittorrent cava gaphor ghex linux-headers
