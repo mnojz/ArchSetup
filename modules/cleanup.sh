@@ -27,10 +27,10 @@ fi
 # ---------------------------------------------------------------------
 
 # for zsh
-chsh -s $(which zsh) "$USER"
+# chsh -s $(which zsh) "$USER"
 
 # for fish
-# chsh -s $(which fish) "$USER"
+chsh -s $(which fish) "$USER"
 
 # ---------------------------------------------------------------------
 # udev rules and power-event 
