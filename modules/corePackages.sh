@@ -18,8 +18,8 @@ AUR_PKGS=(
     visual-studio-code-bin mpv-mpris
     pacseek peaclock msi-ec-dkms-git
     frameworkintegration darkly-bin
-    qt6ct-kde colloid-icon-theme-git
-    sddm-silent-theme unimatrix paru
+    qt6ct-kde colloid-icon-theme-git mpv-uosc
+    sddm-silent-theme unimatrix paru nvchad-git
 )
 
 install_pacman "${PACMAN_PKGS[@]}"

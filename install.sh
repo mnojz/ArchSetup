@@ -12,7 +12,6 @@ source "$SCRIPT_DIR/modules/corePackages.sh"        # install core packages for 
 source "$SCRIPT_DIR/modules/fixDolphinMIME.sh"      # fix dolphin mimetype issue
 source "$SCRIPT_DIR/modules/ambxst.sh"              # install ambxst shell
 source "$SCRIPT_DIR/modules/dotfiles.sh"            # installing all dotfiles from dotfiles ropo
-source "$SCRIPT_DIR/modules/ytd.sh"                 # install ytd protocol handler
 source "$SCRIPT_DIR/modules/cleanup.sh"             # remove conflicting packages
 
 xdg-user-dirs-update
