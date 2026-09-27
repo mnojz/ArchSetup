@@ -33,9 +33,10 @@ fi
 chsh -s $(which fish) "$USER"
 
 # ---------------------------------------------------------------------
-# copying mpv configs from usr to home
+# MPV config
 # ---------------------------------------------------------------------
-cp -r /usr/share/mpv ~/.config/mpv
+cp "$MODULE_DIR/assets/mpv.conf" "$HOME/.config/mpv/mpv.conf"
+cp "$MODULE_DIR/assets/input.conf" "$HOME/.config/mpv/input.conf"
 
 # ---------------------------------------------------------------------
 # udev rules and power-event 

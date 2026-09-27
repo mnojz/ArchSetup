@@ -24,3 +24,6 @@ AUR_PKGS=(
 
 install_pacman "${PACMAN_PKGS[@]}"
 install_aur "${AUR_PKGS[@]}"
+
+# installing MPV UOSC
+curl -fsSL https://raw.githubusercontent.com/tomasklaen/uosc/HEAD/installers/unix.sh
