@@ -1,0 +1,138 @@
+{
+  "categories": [
+    {
+      "id": "shell_cli",
+      "name": "Shell & CLI Productivity",
+      "icon": "",
+      "description": "Modern shells, prompt, fetch, editors, search tools",
+      "enabled": true,
+      "packages": [
+        "fish",
+        "starship",
+        "fastfetch",
+        "eza",
+        "zoxide",
+        "fzf",
+        "ripgrep",
+        "neovim",
+        "curl",
+        "wget",
+        "unzip",
+        "p7zip",
+        "net-tools",
+        "man-db",
+        "pacseek",
+        "peaclock",
+        "unimatrix"
+      ]
+    },
+    {
+      "id": "wayland_desktop",
+      "name": "Hyprland & Desktop System",
+      "icon": "󰖲",
+      "description": "Compositor tools, clipboard, auth, portals",
+      "enabled": true,
+      "packages": [
+        "hyprpicker",
+        "cliphist",
+        "polkit-gnome",
+        "archlinux-xdg-menu",
+        "gnome-keyring",
+        "flatpak",
+        "xdg-user-dirs",
+        "plymouth"
+      ]
+    },
+    {
+      "id": "multimedia",
+      "name": "Multimedia & Creative",
+      "icon": "",
+      "description": "Audio players, video player with uosc, recorder",
+      "enabled": true,
+      "packages": [
+        "mpv",
+        "mpv-mpris",
+        "amberol",
+        "cava",
+        "gpu-screen-recorder",
+        "ffmpegthumbnailer",
+        "resvg",
+        "eog"
+      ]
+    },
+    {
+      "id": "applications",
+      "name": "Desktop Applications",
+      "icon": "󰵔",
+      "description": "Browser, IDE, office suite, file utilities",
+      "enabled": true,
+      "packages": [
+        "brave-origin-bin",
+        "visual-studio-code-bin",
+        "onlyoffice-bin",
+        "bazaar",
+        "gnome-text-editor",
+        "gnome-calculator",
+        "evince",
+        "file-roller",
+        "ark",
+        "pdfarranger",
+        "qbittorrent",
+        "gaphor",
+        "ghex"
+      ]
+    },
+    {
+      "id": "theming_fonts",
+      "name": "Themes, Fonts & Aesthetics",
+      "icon": "󰏘",
+      "description": "Nerd fonts, SDDM theme, icon themes, Qt styling",
+      "enabled": true,
+      "packages": [
+        "nerd-fonts",
+        "colloid-icon-theme-git",
+        "darkly-bin",
+        "qt6ct-kde",
+        "frameworkintegration",
+        "sddm-silent-theme",
+        "nvchad-git"
+      ]
+    },
+    {
+      "id": "hardware_system",
+      "name": "Hardware, Drivers & Network",
+      "icon": "󰍹",
+      "description": "VA-API drivers, Bluetooth TUI, power management",
+      "enabled": true,
+      "packages": [
+        "linux-headers",
+        "intel-media-driver",
+        "libva-nvidia-driver",
+        "libva-utils",
+        "bluetui",
+        "acpi",
+        "evtest",
+        "xorg-xev",
+        "sshfs",
+        "kdeconnect",
+        "android-tools",
+        "raylib",
+        "mcontrolcenter-bin",
+        "msi-ec-dkms-git",
+        "paru"
+      ]
+    },
+    {
+      "id": "gaming",
+      "name": "Gaming & Compatibility",
+      "icon": "󰊴",
+      "description": "Wine and Winetricks runtime environment",
+      "enabled": true,
+      "packages": [
+        "wine",
+        "winetricks"
+      ]
+    }
+  ]
+}
+
