@@ -18,7 +18,7 @@
         "curl",
         "wget",
         "unzip",
-        "p7zip",
+        "7zip",
         "net-tools",
         "man-db",
         "pacseek",
