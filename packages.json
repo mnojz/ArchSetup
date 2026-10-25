@@ -47,7 +47,7 @@
       "id": "multimedia",
       "name": "Multimedia & Creative",
       "icon": "",
-      "description": "Audio players, video player with uosc, recorder",
+      "description": "Audio players, video player with fluent_uosc, recorder",
       "enabled": true,
       "packages": [
         "mpv",

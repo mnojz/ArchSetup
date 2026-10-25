@@ -167,5 +167,6 @@ Distributed under the **MIT License**. See the repository root for details.
 
 - Designed with ❤️ for **Arch Linux** and **Hyprland**.
 - Dotfiles: [`mnojz/dotfiles`](https://github.com/mnojz/dotfiles)
+- MPV Theme: [`mnojz/fluent_UOSC`](https://github.com/mnojz/fluent_UOSC)
 - SDDM Theme: [`uiriansan/SilentSDDM`](https://github.com/uiriansan/SilentSDDM)
 - TUI powered by [Textualize/rich](https://github.com/Textualize/rich).

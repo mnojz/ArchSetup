@@ -71,11 +71,9 @@ def run(manifest_path: Path = None, auto_confirm: bool = False, target_category:
                 pm.install_package(pkg)
                 progress.update(t_id, advance=1)
                 
-    # Ensure MPV uosc fallback if not packaged
-    uosc_dir = Path.home() / ".config/mpv/scripts/uosc"
-    if not pm.is_installed("mpv-uosc") and not uosc_dir.exists():
-        log_running("Installing MPV uosc interface script...")
-        logger.run_cmd(["bash", "-c", "curl -fsSL https://raw.githubusercontent.com/tomasklaen/uosc/HEAD/installers/unix.sh | bash"], check=False)
+    # Install or update custom Fluent UOSC theme for MPV
+    from tasks import fluent_uosc
+    fluent_uosc.run(auto_confirm=True)
 
     log_success("All selected package categories processed")
     return True

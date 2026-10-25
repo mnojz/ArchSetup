@@ -48,14 +48,13 @@ def run(assets_dir: Path, auto_confirm: bool = False) -> bool:
         except Exception:
             pass
 
-    # 3. MPV Configuration
+    # 3. MPV Configuration & Fluent UOSC
     mpv_config_dir = Path.home() / ".config/mpv"
-    mpv_config_dir.mkdir(parents=True, exist_ok=True)
-    if (assets_dir / "mpv/mpv.conf").is_file():
-        shutil.copy(assets_dir / "mpv/mpv.conf", mpv_config_dir / "mpv.conf")
-    if (assets_dir / "mpv/input.conf").is_file():
-        shutil.copy(assets_dir / "mpv/input.conf", mpv_config_dir / "input.conf")
-    log_success("MPV player profiles applied")
+    if not (mpv_config_dir / "scripts/uosc").is_dir():
+        from tasks import fluent_uosc
+        fluent_uosc.run(auto_confirm=True)
+    else:
+        log_success("Fluent UOSC and MPV profiles verified")
 
     # 4. mkinitcpio & Initramfs Regeneration
     mkinit_asset = assets_dir / "system/mkinitcpio.conf"
