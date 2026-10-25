@@ -1,0 +1,24 @@
+[Spectrum]
+spectrumShape=area
+
+[StreamInputs]
+inputDevice=bluez_input.2C:BE:EE:93:10:C8
+visiblePage=pluginsPage
+
+[StreamOutputs]
+mostUsedPresets=Bass Boosted
+outputDevice=bluez_output.2C_BE_EE_93_10_C8.1
+plugins=equalizer#0,convolver#0,bass_enhancer#0,crossfeed#0,maximizer#0
+pluginsListWidth=288
+usedPresets=Bass Boosted:1
+visiblePage=pluginsPage
+visiblePlugin=equalizer#0
+
+[Style]
+forceBreezeTheme=false
+
+[Window]
+autostartOnLogin=true
+height=1028
+noWindowAfterStarting=true
+width=1908

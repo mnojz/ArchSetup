@@ -1,4 +1,27 @@
 """
-ArchSetup Modular Tasks
+ArchSetup Modular Installation Tasks
 """
 
+from tasks import (
+    pacman_tuning,
+    aur_bootstrap,
+    mirror_ranking,
+    package_installer,
+    desktop_integration,
+    ambxst_shell,
+    dotfiles_deploy,
+    fluent_uosc,
+    system_configuration,
+)
+
+__all__ = [
+    "pacman_tuning",
+    "aur_bootstrap",
+    "mirror_ranking",
+    "package_installer",
+    "desktop_integration",
+    "ambxst_shell",
+    "dotfiles_deploy",
+    "fluent_uosc",
+    "system_configuration",
+]

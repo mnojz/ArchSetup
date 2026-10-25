@@ -71,10 +71,6 @@ def run(manifest_path: Path = None, auto_confirm: bool = False, target_category:
                 pm.install_package(pkg)
                 progress.update(t_id, advance=1)
                 
-    # Install or update custom Fluent UOSC theme for MPV
-    from tasks import fluent_uosc
-    fluent_uosc.run(auto_confirm=True)
-
     log_success("All selected package categories processed")
     return True
 

@@ -1,0 +1,11 @@
+---- importing modules ----
+require("modules.autostart")
+require("modules.inputs")
+require("modules.lookandfeel")
+require("modules.monitors")
+require("modules.variables")
+require("modules.workspaces")
+require("modules.scripts")
+require("modules.permission")
+require("modules.plugin")
+require("modules.keybinds")

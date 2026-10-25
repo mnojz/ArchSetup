@@ -34,11 +34,16 @@ def run(auto_confirm: bool = False) -> bool:
         log_info(f"Existing git repository detected at {MPV_CONFIG_DIR}")
         log_running("Pulling latest fluent_UOSC changes from GitHub...")
         code, _ = logger.run_cmd(["git", "-C", str(MPV_CONFIG_DIR), "pull", "--rebase"], check=False)
+        if code != 0:
+            log_running("Resetting conflicting local MPV files to match remote repository...")
+            logger.run_cmd(["git", "-C", str(MPV_CONFIG_DIR), "fetch", "origin"], check=False)
+            code, _ = logger.run_cmd(["git", "-C", str(MPV_CONFIG_DIR), "reset", "--hard", "origin/main"], check=False)
+
         if code == 0:
             log_success("fluent_UOSC updated successfully")
             return True
         else:
-            log_warning("Failed to pull latest fluent_UOSC updates. Retaining existing configuration.")
+            log_warning("Could not sync remote fluent_UOSC. Retaining current configuration.")
             return True
 
     # Case 2: Existing non-git directory with files -> backup first

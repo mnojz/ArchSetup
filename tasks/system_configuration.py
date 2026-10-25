@@ -48,15 +48,7 @@ def run(assets_dir: Path, auto_confirm: bool = False) -> bool:
         except Exception:
             pass
 
-    # 3. MPV Configuration & Fluent UOSC
-    mpv_config_dir = Path.home() / ".config/mpv"
-    if not (mpv_config_dir / "scripts/uosc").is_dir():
-        from tasks import fluent_uosc
-        fluent_uosc.run(auto_confirm=True)
-    else:
-        log_success("Fluent UOSC and MPV profiles verified")
-
-    # 4. mkinitcpio & Initramfs Regeneration
+    # 3. mkinitcpio & Initramfs Regeneration
     mkinit_asset = assets_dir / "system/mkinitcpio.conf"
     if mkinit_asset.is_file():
         system_mkinit = Path("/etc/mkinitcpio.conf")
@@ -94,7 +86,7 @@ def run(assets_dir: Path, auto_confirm: bool = False) -> bool:
         else:
             log_warning("mkinitcpio completed with warnings. Check log.")
 
-    # 5. systemd-boot Configuration
+    # 4. systemd-boot Configuration
     boot_loader_dir = Path("/boot/loader")
     if boot_loader_dir.is_dir():
         log_running("systemd-boot detected; updating bootloader parameters...")
@@ -123,7 +115,7 @@ def run(assets_dir: Path, auto_confirm: bool = False) -> bool:
     else:
         log_dim("systemd-boot not detected; skipping bootloader options")
 
-    # 6. SDDM Display Manager Setup
+    # 5. SDDM Display Manager Setup
     if shutil.which("sddm"):
         log_running("Configuring SDDM service & theme...")
         logger.run_cmd(["sudo", "mkdir", "-p", "/etc/systemd/system/sddm.service.d"], check=False)

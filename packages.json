@@ -23,7 +23,8 @@
         "man-db",
         "pacseek",
         "peaclock",
-        "unimatrix"
+        "unimatrix",
+        "stow"
       ]
     },
     {
