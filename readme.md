@@ -106,17 +106,14 @@ flowchart TD
         C --> D
     end
 
-    subgraph CoreEngine[" Phase 1: Orchestration & Mode Selector "]
+    subgraph CoreEngine[" Phase 1: Orchestration Engine "]
         D --> E["core/main.py Orchestrator"]
         E --> F["Load packages.json + packages.local.json"]
-        F --> G{"CLI Flags Provided?"}
-        G -- "No (Interactive TTY)" --> H["Interactive Arrow-Key Menu (core/menu.py)"]
-        G -- "Yes" --> I["Direct Flag Router"]
-        H --> I
+        F --> G["Interactive Arrow-Key Menu (core/menu.py)"]
     end
 
     subgraph Tasks[" Phase 2: Sequential Modular Pipeline "]
-        I --> T1["1. tasks/pacman_tuning.py (ParallelDownloads=5)"]
+        G --> T1["1. tasks/pacman_tuning.py (ParallelDownloads=5)"]
         T1 --> T2["2. tasks/aur_bootstrap.py (yay-bin bootstrap)"]
         T2 --> T3["3. tasks/mirror_ranking.py (rate-mirrors ranking)"]
         T3 --> T4["4. tasks/package_installer.py (Live Progress)"]
@@ -137,17 +134,15 @@ flowchart TD
 
 ## 🚀 Quick Start
 
-### Option A: One-Line Remote Launch (Fastest & Easiest)
+### Option A: One-Line Remote Launch (Recommended)
 
-On any fresh Arch Linux machine with internet access, paste this one command. It automatically installs `git` and Python dependencies, clones the repo, and immediately opens the interactive menu:
+Run the remote bootstrapper directly on a fresh Arch Linux installation:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/mnojz/ArchSetup/main/install.sh | bash
+curl -sL mnojz.github.io/ArchSetup/install.sh | bash
 ```
 
-### Option B: Manual Clone
-
-If you already have `git` installed:
+### Option B: Manual Git Clone
 
 ```bash
 git clone https://github.com/mnojz/ArchSetup.git
@@ -155,96 +150,26 @@ cd ArchSetup
 ./setup.sh
 ```
 
-### Dry-Run Inspection
-
-Inspect the configured manifest and verify installed versus pending packages without making any system changes:
-
-```bash
-./setup.sh --dry-run
-```
-
-### System Diagnostic Doctor
-
-Audit system health and verify compositor, audio stack, hardware drivers, and microcode:
-
-```bash
-./setup.sh --doctor
-```
-
-> [!TIP]
-> You can safely run `./setup.sh --dry-run` and `./setup.sh --doctor` on any machine at any time to verify system health.
-
 ---
 
-## ⚙️ Command-Line Options
+## 🕹️ Interactive Menu Modules
 
-ArchSetup is designed to be fully modular—usable both interactively and as a daily maintenance and auditing utility.
+ArchSetup provides a single, unified keyboard-driven interface. Every maintenance and installation action can be launched, repeated, and inspected directly from the main menu:
 
-### Standalone Action Flags
-
-| Flag | Long Option | Description |
-| :--- | :--- | :--- |
-| | `--menu` | Force launch the interactive arrow-navigable menu |
-| `-p` | `--packages-only`, `--sync-packages` | Audit packages, compare with manifest, and optionally install missing packages |
-| | `--doctor` | Run diagnostic health check (Hyprland, PipeWire, drivers, microcode) |
-| | `--tune-pacman` | Enable 5x parallel package downloads, Color, and ILoveCandy styling |
-| `-m` | `--mirrors-only`, `--update-mirrors` | Benchmark and rank Arch pacman mirrors via `rate-mirrors` |
-| `-d` | `--dotfiles-only`, `--sync-dotfiles` | Pull latest dotfiles from GitHub and apply configurations |
-| `-s` | `--system-only`, `--tune-system` | Re-apply system configurations (mkinitcpio, bootloader, SDDM, MPV) |
-| | `--desktop-only`, `--fix-mime` | Repair Dolphin menu links, KSycoca6 cache, and MIME database |
-| `-c` | `--category CAT` | Filter audit or install to a specific category (e.g. `gaming`, `multimedia`) |
-| | `--clean-cache` | Remove orphaned packages (`pacman -Qtdq`) and clear pacman/yay caches |
-| `-l` | `--view-log` | Preview the most recent installation/task log file |
-| | `--full` | Run the complete automated end-to-end installation pipeline |
-
-### General Execution Modifiers
-
-| Flag | Long Option | Description |
-| :--- | :--- | :--- |
-| `-h` | `--help` | Display command-line options and exit |
-| `-y` | `--yes`, `--non-interactive` | Auto-confirm all prompts using sensible defaults |
-| | `--dry-run`, `--check` | Inspect package state without modifying your system |
-| | `--skip-mirrors` | Skip `rate-mirrors` pacman ranking and database sync |
-| | `--skip-dotfiles` | Skip cloning and deploying GitHub dotfiles |
-| | `--skip-system` | Skip kernel options, bootloader, SDDM, and shell tuning |
-
----
-
-## 🛠️ Post-Installation Maintenance Workflows
-
-Use ArchSetup even after installation to keep your workstation tuned:
-
-```bash
-# Launch interactive menu
-./setup.sh
-
-# Run health doctor check
-./setup.sh --doctor
-
-# Audit packages and install missing items
-./setup.sh -p
-
-# Audit or sync only a specific category (e.g. multimedia)
-./setup.sh -p -c multimedia
-
-# Speed up package downloads with 5 parallel streams
-./setup.sh --tune-pacman
-
-# Re-rank mirrors whenever downloads feel sluggish
-./setup.sh -m
-
-# Pull the latest changes from your dotfiles repo and re-apply
-./setup.sh -d
-
-# Repair Dolphin file associations and desktop menus after app updates
-./setup.sh --fix-mime
-
-# Clean orphaned packages and trim pacman/AUR cache
-./setup.sh --clean-cache
-
-# Preview the latest execution log
-./setup.sh -l
-```
+| Module | Category | Privilege | Description |
+| :--- | :--- | :--- | :--- |
+| `󰑣 Full Installation Suite` | All-in-One | `Sudo` | Complete 8-step automated installation pipeline |
+| `󰏖 Audit & Sync Packages` | Package Mgmt | `User` | Compares manifest packages against installed packages |
+| `󰒅 Category Checklist` | Selective | `User` | Multi-select checklist to install specific categories |
+| `󰓅 System Diagnostic Doctor` | Diagnostics | `User` | Validates Hyprland, audio stack, CPU microcode, and VA-API |
+| `󰛄 Pacman Turbo Boost` | Optimization | `Sudo` | Enables 5x parallel package downloads and ILoveCandy styling |
+| `󰖟 Mirrorlist Optimization` | Networking | `Sudo` | Benchmarks and ranks fastest Arch mirrors via `rate-mirrors` |
+| `󰏔 Deploy User Dotfiles` | Personalization | `User` | Clones and links personal Hyprland workstation dotfiles |
+| `󰘚 Desktop & MIME Integration` | Desktop Fix | `User` | Repairs Dolphin file associations and rebuilds KSycoca6 cache |
+| `󰒓 System Tuning & Bootloader` | Hardware & Boot | `Sudo` | Configures initramfs, bootloader kernel cmdline, SDDM, Fish |
+| `󰃢 Maintenance Cache Cleanup` | Maintenance | `Sudo` | Removes orphaned packages and trims pacman & AUR caches |
+| `󰈙 View Installation Logs` | Logging | `User` | Displays a real-time preview of recent execution logs |
+| `󰈆 Exit Setup` | Quit | `User` | Restores terminal cursor and exits cleanly |
 
 ---
 
