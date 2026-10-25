@@ -1,6 +1,20 @@
+# Python bytecode & cache
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
+.pytest_cache/
+.mypy_cache/
+
+# Local custom overrides & logs
 packages.local.json
 *.log
+logs/
 
+# Editor & temporary files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.bak
