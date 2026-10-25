@@ -18,32 +18,37 @@ ArchSetup features a fully interactive keyboard-driven TUI engine built with nat
 ### Main Interactive Action Menu
 
 ```text
-╭──────────────────────────────────────────────────────────────────────────────╮
-│  ╭─╮┬─╮╭─╮┬ ┬   ╭─╮┌─┐┌┬┐┬ ┬┌─┐                                              │
-│  ├─┤├┬╯│  ├─┤   ╰─╮├┤  │ │ │├─┘                                              │
-│  ┴ ┴┴└─╰─╯┴ ┴   ╰─╯└─┘ ┴ └─┘┴                                                │
-│                                                                              │
-│  Arch Linux + Hyprland Post-Install Suite                                    │
-│  User: manoj  •  Host: archlinux  •  Kernel: 7.2.11-arch1-1                  │
-╰──────────────────────────────────────────────────────────────────────────────╯
+  ╭─╮┬─╮╭─╮┬ ┬   ╭─╮┌─┐┌┬┐┬ ┬┌─┐   User:   manoj
+  ├─┤├┬╯│  ├─┤   ╰─╮├┤  │ │ │├─┘   Host:   archlinux
+  ┴ ┴┴└─╰─╯┴ ┴   ╰─╯└─┘ ┴ └─┘┴     Kernel: 7.2.11-arch1-1
 
-                        Arch Linux Setup Main Menu                             
-╭───────┬────────────────────────────────┬─────────────────────────────────────╮
-│Pointer│ Action                         │ Description                         │
-├───────┼────────────────────────────────┼─────────────────────────────────────┤
-│   ➜   │  🚀 Full Installation Suite    │ Run complete pipeline (all 8 steps) │
-│       │  📦 Audit & Sync Packages      │ Compare manifest and install missing│
-│       │  📋 Category Checklist         │ Choose specific categories to sync  │
-│       │  🩺 System Diagnostic Doctor   │ Audit Hyprland, audio, ucode, video │
-│       │  ⚡ Pacman Turbo Boost         │ Enable 5x parallel downloads, color │
-│       │  🌐 Mirrorlist Optimization    │ Benchmark and rank fastest mirrors  │
-│       │  🎨 Deploy Dotfiles            │ Pull and configure Hyprland dotfiles│
-│       │  🛠️ Desktop & MIME Integration  │ Repair Dolphin MIME and KSycoca6    │
-│       │  ⚙️ System Tuning & Bootloader  │ Configure initramfs, SDDM, Fish     │
-│       │  🧹 Maintenance Cache Cleanup  │ Clean package cache & purge orphans │
-│       │  📜 View Installation Logs     │ Inspect recent terminal log outputs │
-│       │  🚪 Exit                       │ Exit setup                          │
-╰───────┴────────────────────────────────┴─────────────────────────────────────╯
+                        Arch Linux Setup Main Menu                        
+╭──────────────────────────────────────┬────────────────────┬────────────╮
+│ Action                               │ Category           │ Privilege  │
+├──────────────────────────────────────┼────────────────────┼────────────┤
+│ ▸ 󰑣  Full Installation Suite         │ All-in-One         │    Sudo    │
+│   󰏖  Audit & Sync Packages           │ Package Mgmt       │    User    │
+│   󰒅  Category Checklist              │ Selective          │    User    │
+│   󰓅  System Diagnostic Doctor        │ Diagnostics        │    User    │
+│   󰛄  Pacman Turbo Boost              │ Optimization       │    Sudo    │
+│   󰖟  Mirrorlist Optimization         │ Networking         │    Sudo    │
+│   󰏔  Deploy User Dotfiles            │ Personalization    │    User    │
+│   󰘚  Desktop & MIME Integration      │ Desktop Fix        │    User    │
+│   󰒓  System Tuning & Bootloader      │ Hardware & Boot    │    Sudo    │
+│   󰃢  Maintenance Cache Cleanup       │ Maintenance        │    Sudo    │
+│   󰈙  View Installation Logs          │ Logging            │    User    │
+│   󰈆  Exit Setup                      │ Quit               │    User    │
+╰──────────────────────────────────────┴────────────────────┴────────────╯
+╭────────────── Option Details • 󰑣 Full Installation Suite ──────────────╮
+│  Runs the complete automated post-installation pipeline from start to  │
+│  finish.                                                               │
+│                                                                        │
+│  Executes all 8 sequential phases: pacman turbo boost, yay bootstrap,  │
+│  mirrorlist ranking, package manifests, Dolphin MIME integration,      │
+│  Ambxst shell, dotfiles deployment, and system/boot configuration.     │
+│                                                                        │
+│  Privilege: Sudo Elevation Required   •   Category: All-in-One         │
+╰────────────────────────────────────────────────────────────────────────╯
   Navigation: ↑/↓ or j/k • Enter Select • q Exit
 ```
 
@@ -52,16 +57,22 @@ ArchSetup features a fully interactive keyboard-driven TUI engine built with nat
 Use `Space` to toggle individual categories, `a` to toggle all, and `Enter` to install missing packages:
 
 ```text
-                    Package Category Checklist Selector                        
-╭───────┬──────────┬─────────────────────────────┬──────────┬──────────────────╮
-│Pointer│ Selected │ Category                    │    Count │ Description      │
-├───────┼──────────┼─────────────────────────────┼──────────┼──────────────────┤
-│   ➜   │   [✔]    │  Shell & CLI Productivity   │  17 pkgs │ Shells, prompt   │
-│       │   [✔]    │  Hyprland & Desktop System  │   8 pkgs │ Wayland portals  │
-│       │   [✔]    │  Multimedia & Creative      │   8 pkgs │ MPV, Amberol     │
-│       │   [✔]    │  Desktop Applications       │  13 pkgs │ Brave, Code, Ark │
-│       │   [ ]    │  Gaming & Compatibility     │   2 pkgs │ Wine, Winetricks │
-╰───────┴──────────┴─────────────────────────────┴──────────┴──────────────────╯
+                  Select Software Categories to Install                   
+╭──────┬──────────────────────────────────┬──────────────┬───────────────╮
+│ Sel  │ Category                         │     Packages │    Status     │
+├──────┼──────────────────────────────────┼──────────────┼───────────────┤
+│  󰄲   │ ▸   Shell & CLI Productivity    │      17 pkgs │   Included    │
+│  󰄲   │   󰖲  Hyprland & Desktop System   │       8 pkgs │   Included    │
+│  󰄲   │     Multimedia & Creative       │       8 pkgs │   Included    │
+│  󰄱   │   󰊴  Gaming & Compatibility      │       2 pkgs │   Excluded    │
+╰──────┴──────────────────────────────────┴──────────────┴───────────────╯
+╭────────── Category Details • 󰏖 Shell & CLI Productivity ───────────────╮
+│  Modern shells, prompt, fetch, editors, search tools                   │
+│                                                                        │
+│  Packages (17): fish, starship, fastfetch, eza, zoxide, fzf...         │
+│                                                                        │
+│  Status: Selected for installation   •   Toggle with Space             │
+╰────────────────────────────────────────────────────────────────────────╯
   Navigation: ↑/↓ or j/k • Space Toggle • a Toggle All • Enter Confirm • q Cancel
 ```
 
@@ -361,6 +372,7 @@ ArchSetup/
 │
 ├── core/                        # Core Python orchestration engine
 │   ├── main.py                  # CLI argument parser, interactive loop & router
+│   ├── auth.py                  # In-TUI sudo prompt, credentials verify & keepalive
 │   ├── menu.py                  # Interactive arrow-key navigation & checklists
 │   ├── hardware.py              # CPU/GPU hardware detection & health diagnostics
 │   ├── tui.py                   # Rich panels, tables, and prompt interfaces
