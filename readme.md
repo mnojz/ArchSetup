@@ -137,14 +137,21 @@ flowchart TD
 
 ## 🚀 Quick Start
 
-Run the installer as your **normal user** (do not prefix with `sudo`; elevation will be requested automatically when required):
+### Option A: One-Line Remote Launch (Fastest & Easiest)
+
+On any fresh Arch Linux machine with internet access, paste this one command. It automatically installs `git` and Python dependencies, clones the repo, and immediately opens the interactive menu:
 
 ```bash
-# Clone the repository
+curl -fsSL https://raw.githubusercontent.com/mnojz/ArchSetup/main/install.sh | bash
+```
+
+### Option B: Manual Clone
+
+If you already have `git` installed:
+
+```bash
 git clone https://github.com/mnojz/ArchSetup.git
 cd ArchSetup
-
-# Launch interactive menu
 ./setup.sh
 ```
 
@@ -365,6 +372,7 @@ Windows translation layers and gaming support.
 
 ```text
 ArchSetup/
+├── install.sh                   # One-line remote bootstrapper (curl | bash)
 ├── setup.sh                     # Primary launcher and bootstrap manager
 ├── packages.json                # Declarative package category manifest
 ├── packages.local.json          # Optional local custom package overrides
