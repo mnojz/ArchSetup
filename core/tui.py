@@ -115,6 +115,42 @@ def show_package_audit_table(audit_results: List[Dict[str, Any]]):
     console.print(table)
     console.print()
 
+def show_diagnostics_table(checks: List[Dict[str, Any]]):
+    """Renders the system health diagnostics results (Doctor Mode)."""
+    width = get_terminal_width()
+    table = Table(
+        title="[bold cyan]Arch Linux + Hyprland System Diagnostics[/]",
+        box=box.ROUNDED,
+        border_style="cyan",
+        header_style="bold cyan",
+        width=width,
+        padding=(0, 1),
+        expand=True
+    )
+    table.add_column("Subsystem / Component", style="bold white", width=34)
+    table.add_column("Status", justify="center", width=12)
+    table.add_column("Diagnostic Details", style="dim")
+
+    for ch in checks:
+        st = ch.get("status", "INFO")
+        if st == "PASS":
+            status_text = "[bold green]✔ PASS[/]"
+        elif st == "WARN":
+            status_text = "[bold yellow]⚠ WARN[/]"
+        elif st == "FAIL":
+            status_text = "[bold red]✖ FAIL[/]"
+        else:
+            status_text = "[bold blue]ℹ INFO[/]"
+
+        table.add_row(
+            ch.get("name", "Unknown"),
+            status_text,
+            ch.get("details", "")
+        )
+
+    console.print(table)
+    console.print()
+
 def show_step_header(step_num: int, total_steps: int, title: str):
     """Prints a styled step title panel."""
     width = get_terminal_width()

@@ -32,15 +32,16 @@ def install_package_batch(category_name: str, packages: list) -> bool:
             progress.update(t_id, advance=1)
     return True
 
-def run(manifest_path: Path, auto_confirm: bool = False, target_category: str = None) -> bool:
-    if not manifest_path.exists():
+def run(manifest_path: Path = None, auto_confirm: bool = False, target_category: str = None, categories_list: list = None) -> bool:
+    if categories_list is not None:
+        categories = categories_list
+    elif manifest_path and manifest_path.exists():
+        with open(manifest_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        categories = data.get("categories", [])
+    else:
         log_info("packages.json not found; skipping package installation")
         return False
-
-    with open(manifest_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
-
-    categories = data.get("categories", [])
     
     with Progress(
         SpinnerColumn(),

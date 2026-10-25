@@ -7,11 +7,15 @@
 [![Wayland](https://img.shields.io/badge/Display-Wayland-FFA500?style=for-the-badge&logo=wayland&logoColor=white)](https://wayland.freedesktop.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-> Reproducible, fast, opinionated, and visually stunning automation suite that turns a minimal Arch Linux installation into a fully configured, daily-driver Hyprland workstation with a single command.
+> Reproducible, fast, opinionated, and visually stunning automation suite that turns a minimal Arch Linux installation into a fully configured, daily-driver Hyprland workstation. Run it interactively with arrow keys or script it modularly with CLI flags.
 
 ---
 
-## 🎨 Visual Showcase
+## 🎨 Interactive TUI Showcase
+
+ArchSetup features a fully interactive keyboard-driven TUI engine built with native ANSI escape sequence handling. No complex flags required—simply run `./setup.sh` and navigate with `↑/↓` or `j/k`.
+
+### Main Interactive Action Menu
 
 ```text
 ╭──────────────────────────────────────────────────────────────────────────────╮
@@ -20,44 +24,63 @@
 │  ┴ ┴┴└─╰─╯┴ ┴   ╰─╯└─┘ ┴ └─┘┴                                                │
 │                                                                              │
 │  Arch Linux + Hyprland Post-Install Suite                                    │
-│  User: manoj  •  Host: archlinux  •  Kernel: 7.2.9-arch1-1                   │
+│  User: manoj  •  Host: archlinux  •  Kernel: 7.2.11-arch1-1                  │
 ╰──────────────────────────────────────────────────────────────────────────────╯
 
-                          Configured Package Manifest                           
-╭────────┬──────────────────────────────┬────────────┬─────────────────────────╮
-│  Icon  │ Category                     │   Packages │ Description             │
-├────────┼──────────────────────────────┼────────────┼─────────────────────────┤
-│       │ Shell & CLI Productivity     │    18 pkgs │ Modern shells, prompt,  │
-│        │                              │            │ fetch, editors, search  │
-│   󰖲    │ Hyprland & Desktop System    │     8 pkgs │ Compositor tools,       │
-│        │                              │            │ clipboard, auth, portals│
-│       │ Multimedia & Creative        │     9 pkgs │ Audio players, video    │
-│        │                              │            │ player with uosc, screen│
-│   󰵔    │ Desktop Applications         │    13 pkgs │ Browser, IDE, office    │
-│        │                              │            │ suite, file utilities   │
-│   󰏘    │ Themes, Fonts & Aesthetics   │     7 pkgs │ Nerd fonts, SDDM theme, │
-│        │                              │            │ icon themes, Qt styling │
-│   󰍹    │ Hardware, Drivers & Network  │    15 pkgs │ VA-API drivers, BT TUI, │
-│        │                              │            │ power management        │
-│   󰊴    │ Gaming & Compatibility       │     2 pkgs │ Wine and Winetricks     │
-│        │                              │            │ runtime environment     │
-╰────────┴──────────────────────────────┴────────────┴─────────────────────────╯
+                        Arch Linux Setup Main Menu                             
+╭───────┬────────────────────────────────┬─────────────────────────────────────╮
+│Pointer│ Action                         │ Description                         │
+├───────┼────────────────────────────────┼─────────────────────────────────────┤
+│   ➜   │  🚀 Full Installation Suite    │ Run complete pipeline (all 8 steps) │
+│       │  📦 Audit & Sync Packages      │ Compare manifest and install missing│
+│       │  📋 Category Checklist         │ Choose specific categories to sync  │
+│       │  🩺 System Diagnostic Doctor   │ Audit Hyprland, audio, ucode, video │
+│       │  ⚡ Pacman Turbo Boost         │ Enable 5x parallel downloads, color │
+│       │  🌐 Mirrorlist Optimization    │ Benchmark and rank fastest mirrors  │
+│       │  🎨 Deploy Dotfiles            │ Pull and configure Hyprland dotfiles│
+│       │  🛠️ Desktop & MIME Integration  │ Repair Dolphin MIME and KSycoca6    │
+│       │  ⚙️ System Tuning & Bootloader  │ Configure initramfs, SDDM, Fish     │
+│       │  🧹 Maintenance Cache Cleanup  │ Clean package cache & purge orphans │
+│       │  📜 View Installation Logs     │ Inspect recent terminal log outputs │
+│       │  🚪 Exit                       │ Exit setup                          │
+╰───────┴────────────────────────────────┴─────────────────────────────────────╯
+  Navigation: ↑/↓ or j/k • Enter Select • q Exit
+```
+
+### Multi-Select Category Checklist
+
+Use `Space` to toggle individual categories, `a` to toggle all, and `Enter` to install missing packages:
+
+```text
+                    Package Category Checklist Selector                        
+╭───────┬──────────┬─────────────────────────────┬──────────┬──────────────────╮
+│Pointer│ Selected │ Category                    │    Count │ Description      │
+├───────┼──────────┼─────────────────────────────┼──────────┼──────────────────┤
+│   ➜   │   [✔]    │  Shell & CLI Productivity   │  17 pkgs │ Shells, prompt   │
+│       │   [✔]    │  Hyprland & Desktop System  │   8 pkgs │ Wayland portals  │
+│       │   [✔]    │  Multimedia & Creative      │   8 pkgs │ MPV, Amberol     │
+│       │   [✔]    │  Desktop Applications       │  13 pkgs │ Brave, Code, Ark │
+│       │   [ ]    │  Gaming & Compatibility     │   2 pkgs │ Wine, Winetricks │
+╰───────┴──────────┴─────────────────────────────┴──────────┴──────────────────╯
+  Navigation: ↑/↓ or j/k • Space Toggle • a Toggle All • Enter Confirm • q Cancel
 ```
 
 ---
 
 ## ⚡ Key Highlights
 
-- **Pixel-Perfect Rich TUI**: Native 4-sided rounded panels (`╭─╮`, `│ │`, `╰─╯`), live spinners, and visual progress bars without terminal wrapping bugs.
-- **7 Curated Categories**: 72 pre-configured packages defined in a clean declarative JSON manifest.
-- **Hybrid Package Router**: Resolves packages through official sync repositories first, with seamless automatic fallback to AUR (`yay`/`paru`).
-- **In-Memory Caching**: Scans installed packages via `pacman -Qq` in under 0.05 seconds, skipping redundant network queries.
+- **Interactive Arrow-Key Navigation**: Native raw-terminal input handling (`↑/↓`, `j/k`, `Space`, `Enter`) with zero extra runtime requirements.
+- **System Diagnostic Doctor (`--doctor`)**: One-command subsystem health checker validating Hyprland, PipeWire/WirePlumber, CPU microcode, VA-API acceleration, sudo, and AUR helpers.
+- **Hardware & GPU Auto-Detection**: Dynamically inspects CPU vendor (Intel vs AMD microcode) and GPU controllers (NVIDIA `nvidia_drm.modeset=1`, Intel VA-API, AMD Mesa).
+- **Pacman Turbo Boost (`--tune-pacman`)**: Accelerates downloads up to 5x with `ParallelDownloads = 5`, `Color`, and `ILoveCandy` progress styling.
+- **Local Manifest Overrides (`packages.local.json`)**: Add personal software packages or custom categories without dirtying git tracking.
+- **Hybrid Package Router**: Checks official sync databases first, with seamless fallback to AUR (`yay`/`paru`).
+- **In-Memory Cache Scanning**: Inspects installed packages in under 0.05 seconds via `pacman -Qq`.
 - **Zero-Crash Safety Engineering**:
   - Automatically preserves disk encryption (`encrypt`/`sd-encrypt`) and LVM hooks in `mkinitcpio.conf`.
-  - Timestamped automated backups of mirrorlists, kernel configurations, and boot entries.
-  - Background sudo keepalive loop ensures credentials do not expire during long compilation steps.
   - Non-blocking flags (`--answerclean None --answerdiff None`) prevent background AUR build hangs.
-  - Session-safe handling protects your active display server when running inside Wayland/X11.
+  - Active display server protection prevents compositor shutdowns while running under Wayland/X11.
+  - Background sudo keepalive loop ensures credentials do not expire during long compilation steps.
 
 ---
 
@@ -72,26 +95,30 @@ flowchart TD
         C --> D
     end
 
-    subgraph CoreEngine[" Phase 1: Orchestration Engine "]
+    subgraph CoreEngine[" Phase 1: Orchestration & Mode Selector "]
         D --> E["core/main.py Orchestrator"]
-        E --> F["Load packages.json Manifest"]
-        F --> G["In-Memory Package State Cache (pacman -Qq)"]
+        E --> F["Load packages.json + packages.local.json"]
+        F --> G{"CLI Flags Provided?"}
+        G -- "No (Interactive TTY)" --> H["Interactive Arrow-Key Menu (core/menu.py)"]
+        G -- "Yes" --> I["Direct Flag Router"]
+        H --> I
     end
 
-    subgraph Tasks[" Phase 2: Sequential Modular Tasks "]
-        G --> T1["1. tasks/aur_bootstrap.py (yay-bin)"]
-        T1 --> T2["2. tasks/mirror_ranking.py (rate-mirrors)"]
-        T2 --> T3["3. tasks/package_installer.py (Live Progress)"]
-        T3 --> T4["4. tasks/desktop_integration.py (Dolphin & MIME)"]
-        T4 --> T5["5. tasks/ambxst_shell.py (Ambxst Shell)"]
-        T5 --> T6["6. tasks/dotfiles_deploy.py (mnojz/dotfiles)"]
-        T6 --> T7["7. tasks/system_configuration.py (Boot, SDDM, Fish)"]
+    subgraph Tasks[" Phase 2: Sequential Modular Pipeline "]
+        I --> T1["1. tasks/pacman_tuning.py (ParallelDownloads=5)"]
+        T1 --> T2["2. tasks/aur_bootstrap.py (yay-bin bootstrap)"]
+        T2 --> T3["3. tasks/mirror_ranking.py (rate-mirrors ranking)"]
+        T3 --> T4["4. tasks/package_installer.py (Live Progress)"]
+        T4 --> T5["5. tasks/desktop_integration.py (Dolphin & MIME)"]
+        T5 --> T6["6. tasks/ambxst_shell.py (Ambxst Shell)"]
+        T6 --> T7["7. tasks/dotfiles_deploy.py (User Dotfiles)"]
+        T7 --> T8["8. tasks/system_configuration.py (Hardware & SDDM)"]
     end
 
     subgraph Finish[" Phase 3: Verification & Summary "]
-        T7 --> H1["xdg-user-dirs-update & hyprctl reload"]
-        H1 --> H2["Execution Summary Card & Log Recording"]
-        H2 --> H3["Interactive System Reboot Prompt"]
+        T8 --> K1["xdg-user-dirs-update & hyprctl reload"]
+        K1 --> K2["Execution Summary Card & Log Recording"]
+        K2 --> K3["Interactive System Reboot Prompt"]
     end
 ```
 
@@ -99,48 +126,60 @@ flowchart TD
 
 ## 🚀 Quick Start
 
-Run the installer as your **normal user** (do not prefix with `sudo`; elevation will be requested when needed):
+Run the installer as your **normal user** (do not prefix with `sudo`; elevation will be requested automatically when required):
 
 ```bash
 # Clone the repository
 git clone https://github.com/mnojz/ArchSetup.git
 cd ArchSetup
 
-# Execute installer
+# Launch interactive menu
 ./setup.sh
 ```
 
 ### Dry-Run Inspection
 
-Inspect the configured manifest and verify installed versus pending packages without making any changes:
+Inspect the configured manifest and verify installed versus pending packages without making any system changes:
 
 ```bash
 ./setup.sh --dry-run
 ```
 
+### System Diagnostic Doctor
+
+Audit system health and verify compositor, audio stack, hardware drivers, and microcode:
+
+```bash
+./setup.sh --doctor
+```
+
 > [!TIP]
-> You can safely run `./setup.sh --dry-run` on any machine at any time to verify system package status.
+> You can safely run `./setup.sh --dry-run` and `./setup.sh --doctor` on any machine at any time to verify system health.
 
 ---
 
 ## ⚙️ Command-Line Options
 
-ArchSetup is designed to be fully modular—not only during the initial setup, but also as a daily maintenance and auditing utility.
+ArchSetup is designed to be fully modular—usable both interactively and as a daily maintenance and auditing utility.
 
-### Modular Standalone Actions
+### Standalone Action Flags
 
 | Flag | Long Option | Description |
 | :--- | :--- | :--- |
-| `-p` | `--packages-only`, `--sync-packages` | Audit packages, compare against manifest, and optionally install missing packages |
-| `-m` | `--mirrors-only`, `--update-mirrors` | Benchmark and apply fastest Arch mirrors via `rate-mirrors` |
-| `-d` | `--dotfiles-only`, `--sync-dotfiles` | Pull latest dotfiles from GitHub and re-apply configs |
-| `-s` | `--system-only`, `--tune-system` | Re-apply kernel options, `mkinitcpio`, SDDM theme, and MPV profiles |
+| | `--menu` | Force launch the interactive arrow-navigable menu |
+| `-p` | `--packages-only`, `--sync-packages` | Audit packages, compare with manifest, and optionally install missing packages |
+| | `--doctor` | Run diagnostic health check (Hyprland, PipeWire, drivers, microcode) |
+| | `--tune-pacman` | Enable 5x parallel package downloads, Color, and ILoveCandy styling |
+| `-m` | `--mirrors-only`, `--update-mirrors` | Benchmark and rank Arch pacman mirrors via `rate-mirrors` |
+| `-d` | `--dotfiles-only`, `--sync-dotfiles` | Pull latest dotfiles from GitHub and apply configurations |
+| `-s` | `--system-only`, `--tune-system` | Re-apply system configurations (mkinitcpio, bootloader, SDDM, MPV) |
 | | `--desktop-only`, `--fix-mime` | Repair Dolphin menu links, KSycoca6 cache, and MIME database |
 | `-c` | `--category CAT` | Filter audit or install to a specific category (e.g. `gaming`, `multimedia`) |
 | | `--clean-cache` | Remove orphaned packages (`pacman -Qtdq`) and clear pacman/yay caches |
 | `-l` | `--view-log` | Preview the most recent installation/task log file |
+| | `--full` | Run the complete automated end-to-end installation pipeline |
 
-### General Execution Flags
+### General Execution Modifiers
 
 | Flag | Long Option | Description |
 | :--- | :--- | :--- |
@@ -155,14 +194,23 @@ ArchSetup is designed to be fully modular—not only during the initial setup, b
 
 ## 🛠️ Post-Installation Maintenance Workflows
 
-Use ArchSetup even after installation to keep your system in top shape:
+Use ArchSetup even after installation to keep your workstation tuned:
 
 ```bash
-# Audit package manifest and install only missing packages
+# Launch interactive menu
+./setup.sh
+
+# Run health doctor check
+./setup.sh --doctor
+
+# Audit packages and install missing items
 ./setup.sh -p
 
-# Audit or install only a specific category (e.g. gaming)
-./setup.sh -p -c gaming
+# Audit or sync only a specific category (e.g. multimedia)
+./setup.sh -p -c multimedia
+
+# Speed up package downloads with 5 parallel streams
+./setup.sh --tune-pacman
 
 # Re-rank mirrors whenever downloads feel sluggish
 ./setup.sh -m
@@ -186,7 +234,7 @@ Use ArchSetup even after installation to keep your system in top shape:
 
 Packages are defined declaratively in [`packages.json`](packages.json) across 7 categories:
 
-### 1.  Shell & CLI Productivity (18 Packages)
+### 1.  Shell & CLI Productivity (17 Packages)
 
 Modern terminal emulators, interactive shells, fuzzy finding, and system inspection tools.
 
@@ -204,7 +252,7 @@ Modern terminal emulators, interactive shells, fuzzy finding, and system inspect
 | `pacseek` | Package TUI | Interactive terminal UI for searching Arch & AUR packages |
 | `peaclock` | Utility | Responsive clock, timer, and stopwatch TUI |
 | `unimatrix` | Aesthetic | Matrix terminal digital rain screensaver |
-| `curl`, `wget`, `unzip`, `p7zip`, `net-tools`, `man` | Base Utilities | Foundational archive, networking, and manual utilities |
+| `curl`, `wget`, `unzip`, `p7zip`, `net-tools` | Base Utilities | Foundational archive, networking, and download utilities |
 
 ### 2. 󰖲 Hyprland & Desktop System (8 Packages)
 
@@ -221,7 +269,7 @@ Wayland protocols, notification helpers, authentication agents, and compositor u
 | `xdg-user-dirs` | Directories | Generates standard user directories (Downloads, Documents) |
 | `plymouth` | Boot Art | Graphical boot animation splash screen |
 
-### 3.  Multimedia & Creative (9 Packages)
+### 3.  Multimedia & Creative (8 Packages)
 
 Video players, hardware acceleration, audio visualizers, and screen recorders.
 
@@ -229,7 +277,6 @@ Video players, hardware acceleration, audio visualizers, and screen recorders.
 | :--- | :--- | :--- |
 | `mpv` | Video Player | Modern, scriptable command-line media player |
 | `mpv-mpris` | Controls | MPRIS media key plugin for MPV integration |
-| `mpv-uosc` | Interface | Clean, minimalist on-screen controls for MPV |
 | `amberol` | Music Player | Elegant, lightweight local music player |
 | `cava` | Audio Visual | Console-based audio visualizer |
 | `gpu-screen-recorder` | Recording | Low-overhead screen recorder utilizing NVENC/VA-API |
@@ -309,15 +356,19 @@ Windows translation layers and gaming support.
 ArchSetup/
 ├── setup.sh                     # Primary launcher and bootstrap manager
 ├── packages.json                # Declarative package category manifest
+├── packages.local.json          # Optional local custom package overrides
 ├── readme.md                    # Project documentation
 │
 ├── core/                        # Core Python orchestration engine
-│   ├── main.py                  # CLI argument parser & task runner
+│   ├── main.py                  # CLI argument parser, interactive loop & router
+│   ├── menu.py                  # Interactive arrow-key navigation & checklists
+│   ├── hardware.py              # CPU/GPU hardware detection & health diagnostics
 │   ├── tui.py                   # Rich panels, tables, and prompt interfaces
 │   ├── pacman.py                # In-memory package cache & smart AUR router
 │   └── logger.py                # Real-time command streaming and log rotation
 │
 ├── tasks/                       # Modular, self-contained installation tasks
+│   ├── pacman_tuning.py         # ParallelDownloads=5, Color, and ILoveCandy
 │   ├── aur_bootstrap.py         # Automated yay-bin installation via makepkg
 │   ├── mirror_ranking.py        # rate-mirrors benchmark with safe restore
 │   ├── package_installer.py     # Live progress-tracked batch installation
@@ -338,7 +389,7 @@ ArchSetup/
 
 ## 🛡️ Fresh-Install Hardening
 
-ArchSetup was tested and audited specifically to prevent common post-install failures:
+ArchSetup was audited and tested specifically to prevent common post-install failures:
 
 > [!IMPORTANT]
 > **Disk Encryption (LUKS) Preservation**  
@@ -356,23 +407,29 @@ ArchSetup was tested and audited specifically to prevent common post-install fai
 
 ## 🛠️ Customization Guide
 
-### Editing the Package Manifest
+### Local Custom Manifest (`packages.local.json`)
 
-You can enable or disable entire categories or add packages in [`packages.json`](packages.json):
+To add your own personal packages or categories without modifying git-tracked `packages.json`, simply create a `packages.local.json` file in the project root:
 
 ```json
 {
-  "id": "gaming",
-  "name": "Gaming & Compatibility",
-  "icon": "󰊴",
-  "description": "Wine and Winetricks runtime environment",
-  "enabled": false,
-  "packages": [
-    "wine",
-    "winetricks"
+  "categories": [
+    {
+      "id": "personal_tools",
+      "name": "My Personal Tools",
+      "icon": "🛠️",
+      "description": "Custom utilities and developer tools",
+      "packages": [
+        "tmux",
+        "btop",
+        "lazygit"
+      ]
+    }
   ]
 }
 ```
+
+ArchSetup automatically detects and merges `packages.local.json` at runtime during all inspection, audit, and installation steps.
 
 ---
 

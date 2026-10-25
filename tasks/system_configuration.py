@@ -12,9 +12,15 @@ from pathlib import Path
 from core.tui import log_info, log_success, log_warning, log_running, log_dim
 from core.logger import logger
 from core.pacman import pm
+from core.hardware import detect_cpu, detect_gpu
 
 def run(assets_dir: Path, auto_confirm: bool = False) -> bool:
     user = os.environ.get("USER", os.getlogin())
+
+    # Detect hardware for conditional options
+    cpu_info = detect_cpu()
+    gpu_list = detect_gpu()
+    has_nvidia = any(g["type"] == "NVIDIA" for g in gpu_list)
 
     # 1. Conflicting Package Removal
     conflicting = ["dunst"]
@@ -107,7 +113,11 @@ def run(assets_dir: Path, auto_confirm: bool = False) -> bool:
                 backup_entry = f"{entry_file}.backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
                 logger.run_cmd(["sudo", "cp", str(entry_file), backup_entry], check=False)
 
-                extra_opts = "quiet splash loglevel=3 systemd.show_status=error rd.udev.log_level=3 vt.global_cursor_default=0 nvidia_drm.modeset=1"
+                extra_opts_list = ["quiet", "splash", "loglevel=3", "systemd.show_status=error", "rd.udev.log_level=3", "vt.global_cursor_default=0"]
+                if has_nvidia:
+                    extra_opts_list.append("nvidia_drm.modeset=1")
+                    log_info("Detected NVIDIA GPU: added nvidia_drm.modeset=1 to kernel cmdline")
+                extra_opts = " ".join(extra_opts_list)
                 sed_script = f"/^options / {{ s/quiet//g; s/splash//g; s/loglevel=3//g; s/systemd.show_status=error//g; s/rd.udev.log_level=3//g; s/vt.global_cursor_default=0//g; s/nvidia_drm.modeset=1//g; s/[[:space:]]\\+/ /g; s/[[:space:]]$//; s/$/ {extra_opts}/ }}"
                 logger.run_cmd(["sudo", "sed", "-i", sed_script, str(entry_file)], check=False)
                 log_success(f"Kernel options updated in {entry_file.name}")
