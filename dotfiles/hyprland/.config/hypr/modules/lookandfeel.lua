@@ -52,7 +52,7 @@ hl.curve("easy", { type = "spring", mass = 1, stiffness = 71.2633, dampening = 1
 hl.curve("snappySpring", { type = "spring", mass = 1, stiffness = 160, dampening = 22 })
 
 hl.animation({ leaf = "global", enabled = true, speed = 10, bezier = "default" })
-hl.animation({ leaf = "border", enabled = true, speed = 5.39, bezier = "easeOutQuint" })
+hl.animation({ leaf = "border", enabled = false, speed = 1, bezier = "linear" })
 hl.animation({ leaf = "windows", enabled = false, speed = 1, bezier = "linear" })
 hl.animation({ leaf = "windowsIn", enabled = false, speed = 1, bezier = "linear" })
 hl.animation({ leaf = "windowsMove", enabled = false, speed = 1, bezier = "linear" })
@@ -76,8 +76,10 @@ hl.config({
 
 hl.config({
     misc = {
-        force_default_wallpaper = 0,
-        disable_hyprland_logo   = true,
-        vrr                     = 1
+        force_default_wallpaper      = 0,
+        disable_hyprland_logo        = true,
+        vrr                          = 1,
+        animate_manual_resizes       = false,
+        animate_mouse_windowdragging = false,
     },
 })
