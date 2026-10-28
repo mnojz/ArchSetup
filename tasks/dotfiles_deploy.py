@@ -63,7 +63,7 @@ def run(auto_confirm: bool = False) -> bool:
     backed_up_count = 0
 
     log_running("Resolving file conflicts and preparing targets...")
-    packages = [p for p in DOTFILES_DIR.iterdir() if p.is_dir() and not p.name.startswith(".") and p.name not in ("assets", "mpv")]
+    packages = [p for p in DOTFILES_DIR.iterdir() if p.is_dir() and not p.name.startswith(".") and p.name != "assets"]
 
     for pkg_dir in packages:
         # Pre-resolve any conflicts for each file in the package

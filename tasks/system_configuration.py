@@ -1,6 +1,6 @@
 """
 Task: System Tuning & Hardware Configuration
-Applies mkinitcpio, systemd-boot, Fish shell, SDDM theming, and MPV profiles.
+Applies mkinitcpio, systemd-boot, Fish shell, and SDDM theming.
 """
 
 import os

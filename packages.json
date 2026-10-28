@@ -48,11 +48,10 @@
       "id": "multimedia",
       "name": "Multimedia & Creative",
       "icon": "",
-      "description": "Audio players, video player with fluent_uosc, recorder",
+      "description": "Audio players, Cine video player, recorder",
       "enabled": true,
       "packages": [
-        "mpv",
-        "mpv-mpris",
+        "cine",
         "amberol",
         "cava",
         "gpu-screen-recorder",

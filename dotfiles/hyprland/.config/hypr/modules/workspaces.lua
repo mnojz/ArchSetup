@@ -83,10 +83,10 @@ hl.window_rule({
     size   = "600 460",
 })
 
--- make mpv floating
+-- make cine floating
 hl.window_rule({
-    name   = "mpv",
-    match  = { class = "mpv" },
+    name   = "cine",
+    match  = { class = "io.github.diegopvlk.Cine" },
     center = true,
     float  = true,
 })

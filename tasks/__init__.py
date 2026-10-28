@@ -10,7 +10,6 @@ from tasks import (
     desktop_integration,
     ambxst_shell,
     dotfiles_deploy,
-    fluent_uosc,
     system_configuration,
 )
 
@@ -22,6 +21,5 @@ __all__ = [
     "desktop_integration",
     "ambxst_shell",
     "dotfiles_deploy",
-    "fluent_uosc",
     "system_configuration",
 ]

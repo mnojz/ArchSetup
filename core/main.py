@@ -30,7 +30,6 @@ from tasks import (
     desktop_integration,
     ambxst_shell,
     dotfiles_deploy,
-    fluent_uosc,
     system_configuration,
     pacman_tuning,
 )
@@ -101,11 +100,9 @@ def do_mirrors():
     mirror_ranking.run()
 
 def do_dotfiles():
-    """Deploys bundled user dotfiles and syncs Fluent UOSC."""
-    tui.show_step_header(1, 2, "Bundled User Dotfiles Deployment")
+    """Deploys bundled user dotfiles."""
+    tui.show_step_header(1, 1, "Bundled User Dotfiles Deployment")
     dotfiles_deploy.run()
-    tui.show_step_header(2, 2, "Fluent UOSC Player Interface")
-    fluent_uosc.run()
 
 def do_desktop():
     """Repairs Dolphin actions, KSycoca6 cache, and desktop MIME links."""
@@ -263,7 +260,7 @@ def do_full(manifest_path: Path, categories: List[Dict[str, Any]]):
         tui.log_warning("Full installation cancelled: Sudo authorization not granted.")
         return
 
-    TOTAL_STEPS = 9
+    TOTAL_STEPS = 8
     current_step = 1
 
     # Step 1: Pacman Turbo Boost
@@ -302,12 +299,7 @@ def do_full(manifest_path: Path, categories: List[Dict[str, Any]]):
     dotfiles_deploy.run()
     current_step += 1
 
-    # Step 8: Fluent UOSC
-    tui.show_step_header(current_step, TOTAL_STEPS, "Fluent UOSC Player Interface")
-    fluent_uosc.run()
-    current_step += 1
-
-    # Step 9: System Tuning
+    # Step 8: System Tuning
     tui.show_step_header(current_step, TOTAL_STEPS, "System Configuration & Hardware Tuning")
     system_configuration.run(PROJECT_ROOT / "assets")
 
@@ -352,7 +344,7 @@ def main():
             "tag": "All-in-One",
             "sudo": True,
             "desc": "Runs the complete automated post-installation pipeline from start to finish.",
-            "details": "Executes all 9 sequential phases: pacman turbo boost, yay bootstrap, mirrorlist ranking, package manifests, Dolphin MIME integration, Ambxst shell, bundled dotfiles, Fluent UOSC, and system/boot configuration."
+            "details": "Executes all 8 sequential phases: pacman turbo boost, yay bootstrap, mirrorlist ranking, package manifests, Dolphin MIME integration, Ambxst shell, bundled dotfiles, and system/boot configuration."
         },
         {
             "id": "packages",

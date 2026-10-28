@@ -43,9 +43,9 @@ ArchSetup features a fully interactive keyboard-driven TUI engine built with nat
 │  Runs the complete automated post-installation pipeline from start to  │
 │  finish.                                                               │
 │                                                                        │
-│  Executes all 9 sequential phases: pacman turbo boost, yay bootstrap,  │
+│  Executes all 8 sequential phases: pacman turbo boost, yay bootstrap,  │
 │  mirrorlist ranking, package manifests, Dolphin MIME integration,      │
-│  Ambxst shell, bundled dotfiles, Fluent UOSC, and system configuration.│
+│  Ambxst shell, bundled dotfiles, and system configuration.             │
 │                                                                        │
 │  Privilege: Sudo Elevation Required   •   Category: All-in-One         │
 ╰────────────────────────────────────────────────────────────────────────╯
@@ -167,6 +167,5 @@ Distributed under the **MIT License**. See the repository root for details.
 
 - Designed with ❤️ for **Arch Linux** and **Hyprland**.
 - Dotfiles: Bundled in `dotfiles/` module (managed via GNU Stow)
-- MPV Theme: [`mnojz/fluent_UOSC`](https://github.com/mnojz/fluent_UOSC)
 - SDDM Theme: [`uiriansan/SilentSDDM`](https://github.com/uiriansan/SilentSDDM)
 - TUI powered by [Textualize/rich](https://github.com/Textualize/rich).
