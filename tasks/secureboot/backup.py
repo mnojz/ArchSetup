@@ -79,11 +79,13 @@ def create_full_backup(label: str = "manual") -> Tuple[bool, str, Optional[Path]
 
     from core.logger import logger
 
-    # 1. Back up keys (requires root/sudo for /usr/share/secureboot/keys)
+    # 1. Back up keys (requires root/sudo for /var/lib/sbctl/keys)
     keys_target = snapshot_dir / "keys"
-    if SBCTL_KEYS_DIR.is_dir():
-        logger.run_cmd(["sudo", "cp", "-a", str(SBCTL_KEYS_DIR), str(keys_target)], check=False)
-        logger.run_cmd(["sudo", "chmod", "-R", "700", str(keys_target)], check=False)
+    for cand in (SBCTL_KEYS_DIR, Path("/var/lib/sbctl/keys"), Path("/usr/share/secureboot/keys")):
+        if cand.is_dir():
+            logger.run_cmd(["sudo", "cp", "-aT", str(cand), str(keys_target)], check=False)
+            logger.run_cmd(["sudo", "chmod", "-R", "700", str(keys_target)], check=False)
+            break
 
     # 2. Back up bootloader configuration
     esp = get_primary_esp_path()
@@ -143,8 +145,8 @@ def restore_keys_from_backup(backup_path: Path) -> Tuple[bool, str]:
 
     from core.logger import logger
 
-    logger.run_cmd(["sudo", "mkdir", "-p", str(SBCTL_KEYS_DIR.parent)], check=False)
-    code, _ = logger.run_cmd(["sudo", "cp", "-a", str(keys_src), str(SBCTL_KEYS_DIR)], check=False)
+    logger.run_cmd(["sudo", "mkdir", "-p", str(SBCTL_KEYS_DIR)], check=False)
+    code, _ = logger.run_cmd(["sudo", "cp", "-aT", str(keys_src), str(SBCTL_KEYS_DIR)], check=False)
     if code == 0:
         logger.run_cmd(["sudo", "chmod", "700", str(SBCTL_KEYS_DIR)], check=False)
         return True, "Secure Boot keys restored successfully from backup."

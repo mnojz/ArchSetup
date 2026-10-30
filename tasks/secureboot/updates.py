@@ -20,6 +20,9 @@ Target = linux-zen
 Target = linux-hardened
 Target = systemd
 Target = systemd-libs
+Target = mkinitcpio
+Target = grub
+Target = refind
 Target = sbctl
 
 [Action]
@@ -58,6 +61,11 @@ def install_update_hooks() -> Tuple[bool, str]:
     Installs the 99-sbctl-resign.hook pacman hook to ensure any system update
     automatically re-signs the entire boot chain.
     """
+    from core import auth
+    if not auth.is_sudo_active():
+        if not auth.request_sudo_auth("Installing Pacman Update Hooks"):
+            return False, "Sudo authorization cancelled or required."
+
     from core.logger import logger
 
     # Ensure pacman hook directory exists
@@ -80,10 +88,19 @@ def install_update_hooks() -> Tuple[bool, str]:
 def remove_update_hooks() -> Tuple[bool, str]:
     """Safely removes ONLY the pacman hook installed by this module."""
     if SBCTL_PACMAN_HOOK.is_file():
+        from core import auth
+        if not auth.is_sudo_active():
+            if not auth.request_sudo_auth("Removing Pacman Update Hooks"):
+                return False, "Sudo authorization cancelled or required."
+
         from core.logger import logger
         code, _ = logger.run_cmd(["sudo", "rm", "-f", str(SBCTL_PACMAN_HOOK)], check=False)
         if code == 0:
             return True, "Pacman signing hook removed successfully."
         return False, "Failed to remove pacman signing hook."
     return True, "No hook file found to remove."
+
+
+# Compatibility alias
+install_pacman_hook = install_update_hooks
 

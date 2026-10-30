@@ -16,6 +16,11 @@ from tasks.secureboot.inventory import (
     find_esp_mounts,
     get_primary_esp_path,
 )
+from tasks.secureboot.utils import (
+    file_exists_privileged,
+    find_files_privileged,
+    run_privileged,
+)
 
 
 def inspect_kernel_configuration() -> Dict[str, Any]:
@@ -78,22 +83,22 @@ def get_signable_kernel_files() -> List[Path]:
     ukis = detect_unified_kernel_images()
     for u in ukis:
         p = Path(u["path"])
-        if p.is_file() and str(p) not in seen:
+        if file_exists_privileged(p) and str(p) not in seen:
             files.append(p)
             seen.add(str(p))
 
     # 2. Traditional kernels on /boot
     for k in ARCH_KERNEL_NAMES:
         vm = Path(f"/boot/vmlinuz-{k}")
-        if vm.is_file() and str(vm) not in seen:
+        if file_exists_privileged(vm) and str(vm) not in seen:
             files.append(vm)
             seen.add(str(vm))
 
     # 3. Check ESP mounts for vmlinuz files
     for esp in find_esp_mounts():
         m = Path(esp["mountpoint"])
-        for vm in m.glob("vmlinuz*"):
-            if vm.is_file() and str(vm) not in seen:
+        for vm in find_files_privileged(m, "vmlinuz*"):
+            if file_exists_privileged(vm) and str(vm) not in seen:
                 files.append(vm)
                 seen.add(str(vm))
 
@@ -111,6 +116,11 @@ def sign_all_kernels() -> Tuple[bool, List[str], List[str]]:
 
     if not shutil.which("sbctl"):
         return False, [], ["sbctl is not installed."]
+
+    from core import auth
+    if not auth.is_sudo_active():
+        if not auth.request_sudo_auth("Signing Kernel Binaries"):
+            return False, [], ["Sudo authorization cancelled or required."]
 
     from core.logger import logger
 
@@ -138,12 +148,7 @@ def verify_kernel_signatures() -> Dict[str, bool]:
 
     for f in files:
         try:
-            code = subprocess.run(
-                ["sbctl", "verify", str(f)],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                check=False,
-            ).returncode
+            code, _, _ = run_privileged(["sbctl", "verify", str(f)])
             results[str(f)] = (code == 0)
         except Exception:
             results[str(f)] = False

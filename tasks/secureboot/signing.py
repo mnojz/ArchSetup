@@ -14,6 +14,10 @@ from tasks.secureboot.adapters import get_active_adapter
 from tasks.secureboot.config import WINDOWS_BOOTMGR_REL
 from tasks.secureboot.inventory import find_esp_mounts, get_primary_esp_path
 from tasks.secureboot.kernel import get_signable_kernel_files
+from tasks.secureboot.utils import (
+    file_exists_privileged,
+    run_privileged,
+)
 
 
 def is_windows_binary(path: Path) -> bool:
@@ -84,13 +88,18 @@ def sign_file(file_path: Path, register: bool = True) -> Tuple[bool, str]:
     if is_windows_binary(file_path):
         return False, f"Refusing to modify Windows binary: {file_path}"
 
-    if not file_path.is_file():
+    if not file_exists_privileged(file_path):
         return False, f"File does not exist: {file_path}"
 
     if not shutil.which("sbctl"):
         return False, "sbctl is not installed."
 
+    from core import auth
     from core.logger import logger
+
+    if not auth.is_sudo_active():
+        if not auth.request_sudo_auth("Signing EFI Binaries"):
+            return False, "Sudo authorization cancelled or required."
 
     cmd = ["sudo", "sbctl", "sign"]
     if register:
@@ -108,7 +117,12 @@ def sign_all_registered() -> Tuple[bool, str]:
     if not shutil.which("sbctl"):
         return False, "sbctl is not installed."
 
+    from core import auth
     from core.logger import logger
+
+    if not auth.is_sudo_active():
+        if not auth.request_sudo_auth("Signing All Registered Binaries"):
+            return False, "Sudo authorization cancelled or required."
 
     code, _ = logger.run_cmd(["sudo", "sbctl", "sign-all"], check=False)
     if code == 0:
@@ -133,27 +147,53 @@ def verify_all_system_files() -> Dict[str, Any]:
 
     all_targets = list(set(boot_files + kernel_files))
 
+    # Also include any files already registered in sbctl's files.json database
+    for cand_db in (Path("/var/lib/sbctl/files.json"), Path("/usr/share/secureboot/files.json")):
+        if cand_db.is_file():
+            try:
+                db_data = json.loads(cand_db.read_text(encoding="utf-8"))
+                if isinstance(db_data, dict):
+                    for registered_path in db_data.keys():
+                        fp = Path(registered_path)
+                        if not is_windows_binary(fp) and fp not in all_targets:
+                            all_targets.append(fp)
+            except Exception:
+                pass
+
+    # Also query sbctl verify --json to find any ESP files that sbctl itself detected
+    if shutil.which("sbctl"):
+        code, out, _ = run_privileged(["sbctl", "verify", "--json"])
+        if code == 0 and out.strip():
+            try:
+                data = json.loads(out)
+                if isinstance(data, list):
+                    for item in data:
+                        fname = item.get("file_name") or item.get("path")
+                        if fname:
+                            fp = Path(fname)
+                            if not is_windows_binary(fp) and fp not in all_targets:
+                                all_targets.append(fp)
+            except Exception:
+                pass
+
     if not shutil.which("sbctl"):
         return {
             "all_verified": False,
             "results": {str(f): False for f in all_targets},
             "missing": [],
             "sbctl_available": False,
+            "verified_count": 0,
+            "total_count": len(all_targets),
         }
 
     for target in all_targets:
-        if not target.is_file():
+        if not file_exists_privileged(target):
             missing_files.append(str(target))
             verification_results[str(target)] = False
             continue
 
         try:
-            code = subprocess.run(
-                ["sbctl", "verify", str(target)],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                check=False,
-            ).returncode
+            code, _, _ = run_privileged(["sbctl", "verify", str(target)])
             verification_results[str(target)] = (code == 0)
         except Exception:
             verification_results[str(target)] = False
@@ -184,6 +224,22 @@ def auto_discover_and_sign_all() -> Tuple[bool, List[str], List[str]]:
     if adapter:
         targets.extend(adapter.get_signable_files())
     targets.extend(get_signable_kernel_files())
+
+    # In addition, query sbctl verify --json to catch any signable files discovered directly by sbctl on ESP
+    if shutil.which("sbctl"):
+        code, out, _ = run_privileged(["sbctl", "verify", "--json"])
+        if code == 0 and out.strip():
+            try:
+                data = json.loads(out)
+                if isinstance(data, list):
+                    for item in data:
+                        fname = item.get("file_name") or item.get("path")
+                        if fname:
+                            fp = Path(fname)
+                            if not is_windows_binary(fp) and fp not in targets:
+                                targets.append(fp)
+            except Exception:
+                pass
 
     # Filter out duplicates and Windows files
     valid_targets: List[Path] = []

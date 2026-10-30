@@ -18,6 +18,12 @@ from tasks.secureboot.config import (
     SBCTL_DB_DIR,
     SBCTL_KEYS_DIR,
 )
+from tasks.secureboot.utils import (
+    dir_exists_privileged,
+    file_exists_privileged,
+    find_files_privileged,
+    run_privileged,
+)
 
 
 def do_keys_exist() -> bool:
@@ -32,16 +38,18 @@ def do_keys_exist() -> bool:
                 timeout=5,
             )
             data = json.loads(out)
-            return bool(data.get("installed", False))
+            if bool(data.get("installed", False)):
+                return True
         except Exception:
             pass
 
-    # 2. Check filesystem directory
-    if SBCTL_KEYS_DIR.is_dir():
-        # Check if PK, KEK, db exist
-        has_pk = any((SBCTL_KEYS_DIR / "PK").glob("*")) if (SBCTL_KEYS_DIR / "PK").is_dir() else False
-        has_db = any((SBCTL_KEYS_DIR / "db").glob("*")) if (SBCTL_KEYS_DIR / "db").is_dir() else False
-        return has_pk or has_db
+    # 2. Check filesystem directories (/var/lib/sbctl/keys and /usr/share/secureboot/keys)
+    for cand_dir in (SBCTL_KEYS_DIR, Path("/var/lib/sbctl/keys"), Path("/usr/share/secureboot/keys")):
+        if dir_exists_privileged(cand_dir):
+            has_pk = len(find_files_privileged(cand_dir / "PK", "*")) > 0
+            has_db = len(find_files_privileged(cand_dir / "db", "*")) > 0
+            if has_pk or has_db:
+                return True
 
     return False
 
@@ -54,30 +62,39 @@ def inspect_key_inventory() -> Dict[str, Dict[str, Any]]:
     """
     inventory: Dict[str, Dict[str, Any]] = {}
 
+    # Check active directory or fallback
+    keys_dir = SBCTL_KEYS_DIR
+    if not dir_exists_privileged(keys_dir):
+        for alt in (Path("/var/lib/sbctl/keys"), Path("/usr/share/secureboot/keys")):
+            if dir_exists_privileged(alt):
+                keys_dir = alt
+                break
+
     for db_name in SB_DATABASES:
-        db_path = SBCTL_KEYS_DIR / db_name
+        db_path = keys_dir / db_name
         cert_path: Optional[Path] = None
         key_path: Optional[Path] = None
 
-        if db_path.is_dir():
-            # Standard sbctl structure: PK/PK.key, PK/PK.pem (or .crt)
-            for f in db_path.iterdir():
+        if dir_exists_privileged(db_path):
+            files = find_files_privileged(db_path, "*")
+            for f in files:
                 if f.suffix in (".crt", ".pem", ".der"):
                     cert_path = f
                 elif f.suffix in (".key", ".priv"):
                     key_path = f
 
-        has_cert = cert_path is not None and cert_path.is_file()
-        has_key = key_path is not None and key_path.is_file()
+        has_cert = cert_path is not None and file_exists_privileged(cert_path)
+        has_key = key_path is not None and file_exists_privileged(key_path)
 
         # Check permissions on private key if present
         key_perm_secure = False
         if has_key and key_path:
             try:
                 mode = key_path.stat().st_mode & 0o777
-                key_perm_secure = (mode & 0o077) == 0  # No group/world access
-            except OSError:
-                pass
+                key_perm_secure = (mode & 0o077) == 0
+            except (PermissionError, OSError):
+                # If unprivileged user can't stat/read it, it's definitely protected from unprivileged access
+                key_perm_secure = True
 
         inventory[db_name] = {
             "name": db_name,
@@ -104,6 +121,11 @@ def create_keys(force: bool = False) -> Tuple[bool, str]:
     if not shutil.which("sbctl"):
         return False, "sbctl is not installed."
 
+    from core import auth
+    if not auth.is_sudo_active():
+        if not auth.request_sudo_auth("Generating Secure Boot Keys"):
+            return False, "Sudo authorization cancelled or required."
+
     try:
         from core.logger import logger
         code, _ = logger.run_cmd(["sudo", "sbctl", "create-keys"], check=False)
@@ -120,12 +142,10 @@ def create_keys(force: bool = False) -> Tuple[bool, str]:
 def _secure_key_permissions() -> None:
     """Ensures private keys under sbctl have 0600 permissions and directory has 0700."""
     try:
-        if SBCTL_KEYS_DIR.is_dir():
-            subprocess.run(["sudo", "chmod", "700", str(SBCTL_KEYS_DIR)], check=False)
-            for root, _, files in os.walk(str(SBCTL_KEYS_DIR)):
-                for f in files:
-                    if f.endswith(".key") or f.endswith(".priv"):
-                        subprocess.run(["sudo", "chmod", "600", os.path.join(root, f)], check=False)
+        from core.logger import logger
+        for cand in (SBCTL_KEYS_DIR, Path("/var/lib/sbctl/keys"), Path("/usr/share/secureboot/keys")):
+            logger.run_cmd(["sudo", "chmod", "700", str(cand)], check=False)
+            logger.run_cmd(["sudo", "chmod", "-R", "go-rwx", str(cand)], check=False)
     except Exception:
         pass
 
@@ -141,13 +161,18 @@ def export_certificates(dest_dir: Path) -> Tuple[bool, List[str]]:
     inv = inspect_key_inventory()
     for db_name, data in inv.items():
         cert_p = data.get("certificate_path")
-        if cert_p and Path(cert_p).is_file():
-            target = dest_dir / f"{db_name}.pem"
-            try:
-                shutil.copy2(cert_p, target)
-                exported.append(str(target))
-            except Exception:
-                pass
+        if cert_p:
+            cp = Path(cert_p)
+            if file_exists_privileged(cp):
+                target = dest_dir / f"{db_name}.pem"
+                try:
+                    # Try direct copy, falling back to privileged cp if parent is 0700
+                    shutil.copy2(str(cp), str(target))
+                    exported.append(str(target))
+                except (PermissionError, OSError):
+                    code, _, _ = run_privileged(["cp", str(cp), str(target)])
+                    if code == 0:
+                        exported.append(str(target))
 
     return len(exported) > 0, exported
 

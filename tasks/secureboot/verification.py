@@ -82,7 +82,15 @@ def run_full_health_check() -> HealthCheckResult:
 
     # 2. efivarfs Interface
     if is_efivars_mounted():
-        res.add_item("EFI Variables (efivars)", STATUS_HEALTHY, "Accessible for read/write inspection")
+        try:
+            from tasks.secureboot.enrollment import get_immutable_efivars
+            locked = get_immutable_efivars()
+            if locked and is_setup_mode():
+                res.add_item("EFI Variables (efivars)", STATUS_CONFIGURED, f"Mounted ({len(locked)} efivars immutable; unlocked automatically during enrollment)")
+            else:
+                res.add_item("EFI Variables (efivars)", STATUS_HEALTHY, "Accessible for read/write inspection")
+        except Exception:
+            res.add_item("EFI Variables (efivars)", STATUS_HEALTHY, "Accessible for read/write inspection")
     else:
         res.add_item("EFI Variables (efivars)", STATUS_FAILED, "efivars is unmounted or inaccessible")
 

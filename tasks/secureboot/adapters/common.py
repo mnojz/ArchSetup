@@ -48,6 +48,10 @@ class BootloaderAdapter(ABC):
         """Signs the bootloader EFI executable(s) using sbctl and registers them."""
         pass
 
+    def sign_binaries(self) -> Tuple[bool, str]:
+        """Convenience alias for sign()."""
+        return self.sign()
+
     @abstractmethod
     def verify(self) -> Dict[str, Any]:
         """Verifies the signatures of all bootloader-specific EFI executables."""

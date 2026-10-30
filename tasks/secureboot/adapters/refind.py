@@ -10,6 +10,11 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from tasks.secureboot.adapters.common import BootloaderAdapter
 from tasks.secureboot.inventory import find_esp_mounts, get_primary_esp_path
+from tasks.secureboot.utils import (
+    dir_exists_privileged,
+    file_exists_privileged,
+    run_privileged,
+)
 
 
 class RefindAdapter(BootloaderAdapter):
@@ -99,12 +104,7 @@ class RefindAdapter(BootloaderAdapter):
 
         for f in files:
             try:
-                code = subprocess.run(
-                    ["sbctl", "verify", str(f)],
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                    check=False,
-                ).returncode
+                code, _, _ = run_privileged(["sbctl", "verify", str(f)])
                 results[str(f)] = (code == 0)
             except Exception:
                 results[str(f)] = False

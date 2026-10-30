@@ -31,6 +31,13 @@ from tasks.secureboot.adapters.grub import GrubAdapter
 from tasks.secureboot.adapters.limine import LimineAdapter
 from tasks.secureboot.adapters.refind import RefindAdapter
 from tasks.secureboot.adapters.systemd_boot import SystemdBootAdapter
+import core.auth
+
+
+def setUpModule():
+    """Ensure sudo checks during unit tests always simulate an active privileged session."""
+    p = patch("core.auth.is_sudo_active", return_value=True)
+    p.start()
 
 
 class TestFirmwareInspection(unittest.TestCase):
@@ -258,6 +265,23 @@ class TestFirmwareEnrollmentPreconditions(unittest.TestCase):
         self.assertTrue(passed)
         self.assertEqual(len(check.blockers), 0)
 
+    @patch("tasks.secureboot.enrollment.EnrollmentPreconditionCheck.run", return_value=True)
+    @patch("shutil.which", return_value="/usr/bin/sbctl")
+    @patch("tasks.secureboot.enrollment.unlock_efivar_immutability", return_value=(True, ["/sys/firmware/efi/efivars/PK-xxx"]))
+    @patch("subprocess.run")
+    @patch("core.logger.logger.run_cmd", return_value=(0, ""))
+    def test_enrollment_executes_with_ignore_immutable(self, mock_run_cmd, mock_subproc, mock_unlock, *mocks):
+        mock_subproc.return_value = MagicMock(returncode=0, stdout="--ignore-immutable\n--microsoft")
+        ok, msg = enrollment.execute_enrollment(include_microsoft=True)
+        self.assertTrue(ok)
+        mock_unlock.assert_called_once()
+        # Verify --ignore-immutable was passed to sbctl enroll-keys
+        called_cmd = mock_run_cmd.call_args[0][0]
+        self.assertIn("sbctl", called_cmd)
+        self.assertIn("enroll-keys", called_cmd)
+        self.assertIn("--ignore-immutable", called_cmd)
+        self.assertIn("--microsoft", called_cmd)
+
 
 class TestUpdateAutomation(unittest.TestCase):
     """Test pacman hook installation and inspection."""
@@ -332,6 +356,37 @@ class TestGuidedRecovery(unittest.TestCase):
         self.assertTrue(any("Legacy BIOS" in i["title"] for i in issues))
         legacy_issue = next(i for i in issues if "Legacy BIOS" in i["title"])
         self.assertFalse(legacy_issue["automatic_fix"])  # Must be manual firmware setting!
+
+    @patch("tasks.secureboot.enrollment.unlock_efivar_immutability", return_value=(True, ["/sys/firmware/efi/efivars/PK-xxx"]))
+    def test_recovery_applies_unlock_fix(self, mock_unlock):
+        ok, msg = recovery.apply_recovery_fix("unlock_efivars")
+        self.assertTrue(ok)
+        self.assertIn("1 efivars", msg)
+        mock_unlock.assert_called_once()
+
+    @patch("tasks.secureboot.adapters.get_active_adapter")
+    @patch("tasks.secureboot.kernel.sign_all_kernels", return_value=(True, ["/boot/vmlinuz-linux"], []))
+    def test_recovery_applies_sign_all_fix(self, mock_sign_k, mock_get_ad):
+        mock_ad = MagicMock()
+        mock_ad.sign.return_value = (True, "Bootloader signed")
+        mock_get_ad.return_value = mock_ad
+
+        ok, msg = recovery.apply_recovery_fix("sign_all")
+        self.assertTrue(ok)
+        mock_ad.sign.assert_called_once()
+        mock_sign_k.assert_called_once()
+
+    @patch("tasks.secureboot.updates.install_update_hooks", return_value=(True, "Hook installed"))
+    def test_recovery_applies_install_hook_fix(self, mock_install_hk):
+        ok, msg = recovery.apply_recovery_fix("install_hook")
+        self.assertTrue(ok)
+        mock_install_hk.assert_called_once()
+
+    @patch("core.logger.logger.run_cmd", return_value=(0, ""))
+    def test_recovery_applies_mount_efivars_fix(self, mock_run_cmd):
+        ok, msg = recovery.apply_recovery_fix("mount_efivars")
+        self.assertTrue(ok)
+        mock_run_cmd.assert_called_once()
 
 
 class TestAdvancedScenarios(unittest.TestCase):

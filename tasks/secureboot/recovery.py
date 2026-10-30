@@ -4,7 +4,7 @@ Diagnoses Secure Boot failure scenarios and provides actionable, step-by-step re
 SAFETY: Never automatically clears firmware keys or alters BIOS variables destructively.
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 from tasks.secureboot.adapters import get_active_adapter
 from tasks.secureboot.firmware import (
@@ -151,5 +151,58 @@ def diagnose_system() -> List[Dict[str, Any]]:
             "automatic_fix": False,
         })
 
+    # Issue: Immutable efivarfs attributes
+    from tasks.secureboot.enrollment import get_immutable_efivars
+    locked_vars = get_immutable_efivars()
+    if locked_vars and is_setup_mode():
+        issues.append({
+            "title": f"Firmware Variables Locked ({len(locked_vars)} efivars immutable)",
+            "severity": "MEDIUM",
+            "description": (
+                "The Linux kernel has marked efivarfs security variables (PK, KEK, db) as immutable (+i). "
+                "This blocks key enrollment until the immutable flags are cleared."
+            ),
+            "recovery_steps": [
+                "Run automatic fix in ArchSetup, or execute:",
+                "sudo chattr -i /sys/firmware/efi/efivars/{PK,KEK,db,dbx}*",
+            ],
+            "automatic_fix": True,
+            "fix_action": "unlock_efivars",
+        })
+
     return issues
+
+
+def apply_recovery_fix(fix_action: str) -> Tuple[bool, str]:
+    """Applies an automated recovery fix for a recognized actionable issue."""
+    if fix_action == "unlock_efivars":
+        from tasks.secureboot.enrollment import unlock_efivar_immutability
+        ok, targets = unlock_efivar_immutability()
+        if ok:
+            return True, f"Successfully cleared immutable flags on {len(targets)} efivars."
+        return False, "Failed to clear immutable flags. Ensure sudo privileges are available."
+
+    elif fix_action == "mount_efivars":
+        from core.logger import logger
+        code, _ = logger.run_cmd(["sudo", "mount", "-t", "efivarfs", "efivarfs", "/sys/firmware/efi/efivars"], check=False)
+        return code == 0, "Mounted efivarfs successfully." if code == 0 else "Failed to mount efivarfs."
+
+    elif fix_action == "generate_keys":
+        from tasks.secureboot.keys import create_keys
+        return create_keys()
+
+    elif fix_action == "sign_all":
+        from tasks.secureboot.adapters import get_active_adapter
+        from tasks.secureboot.kernel import sign_all_kernels
+        ad = get_active_adapter()
+        ad_ok, ad_msg = (ad.sign() if ad else (True, "No bootloader adapter required"))
+        k_ok, k_signed, k_failed = sign_all_kernels()
+        k_msg = f"Signed {len(k_signed)} kernel(s)" if k_ok else f"Failed to sign: {', '.join(k_failed)}"
+        return (ad_ok and k_ok), f"Bootloader: {ad_msg}\nKernels: {k_msg}"
+
+    elif fix_action == "install_hook":
+        from tasks.secureboot.updates import install_update_hooks
+        return install_update_hooks()
+
+    return False, f"Unknown fix action: {fix_action}"
 

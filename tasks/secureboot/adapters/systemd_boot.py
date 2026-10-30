@@ -10,6 +10,11 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from tasks.secureboot.adapters.common import BootloaderAdapter
 from tasks.secureboot.inventory import find_esp_mounts, get_primary_esp_path
+from tasks.secureboot.utils import (
+    dir_exists_privileged,
+    file_exists_privileged,
+    run_privileged,
+)
 
 
 class SystemdBootAdapter(BootloaderAdapter):
@@ -29,31 +34,40 @@ class SystemdBootAdapter(BootloaderAdapter):
         # Check ESP files directly
         esp = get_primary_esp_path()
         if esp:
-            if (esp / "EFI/systemd/systemd-bootx64.efi").is_file():
+            if file_exists_privileged(esp / "EFI/systemd/systemd-bootx64.efi"):
                 return True
-            if (esp / "loader/loader.conf").is_file():
+            if file_exists_privileged(esp / "loader/loader.conf"):
                 return True
 
-        if Path("/boot/loader/loader.conf").is_file():
+        if file_exists_privileged(Path("/boot/loader/loader.conf")):
             return True
 
         return False
 
     def get_signable_files(self) -> List[Path]:
         files: List[Path] = []
+        seen: set = set()
+        search_dirs: List[Path] = []
+
         esps = find_esp_mounts()
         for esp in esps:
-            m = Path(esp["mountpoint"])
+            search_dirs.append(Path(esp["mountpoint"]))
+        for cand in ("/boot", "/efi", "/boot/efi"):
+            cp = Path(cand)
+            if cp not in search_dirs:
+                search_dirs.append(cp)
+
+        for m in search_dirs:
             sd_efi = m / "EFI/systemd/systemd-bootx64.efi"
-            if sd_efi.is_file():
+            if file_exists_privileged(sd_efi) and str(sd_efi) not in seen:
                 files.append(sd_efi)
+                seen.add(str(sd_efi))
 
             # Check generic fallback bootx64.efi
             fallback_efi = m / "EFI/BOOT/BOOTX64.EFI"
-            if fallback_efi.is_file():
-                # Check if it has similar size to systemd-bootx64.efi or is identical
-                if sd_efi.is_file() and abs(fallback_efi.stat().st_size - sd_efi.stat().st_size) < 4096:
-                    files.append(fallback_efi)
+            if file_exists_privileged(fallback_efi) and str(fallback_efi) not in seen:
+                files.append(fallback_efi)
+                seen.add(str(fallback_efi))
 
         return files
 
@@ -114,13 +128,7 @@ class SystemdBootAdapter(BootloaderAdapter):
 
         for f in files:
             try:
-                # sbctl verify <file>
-                code = subprocess.run(
-                    ["sbctl", "verify", str(f)],
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                    check=False,
-                ).returncode
+                code, _, _ = run_privileged(["sbctl", "verify", str(f)])
                 results[str(f)] = (code == 0)
             except Exception:
                 results[str(f)] = False

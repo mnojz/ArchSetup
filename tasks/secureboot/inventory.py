@@ -17,55 +17,83 @@ from tasks.secureboot.config import (
     SBCTL_PACMAN_HOOK,
     WINDOWS_BOOTMGR_REL,
 )
+from tasks.secureboot.utils import (
+    dir_exists_privileged,
+    file_exists_privileged,
+    find_files_privileged,
+    read_text_privileged,
+    run_privileged,
+)
+
+
+def _flatten_findmnt_nodes(node: Any) -> List[Dict[str, Any]]:
+    """Recursively flattens findmnt hierarchical tree into a flat list of filesystem dictionaries."""
+    flat: List[Dict[str, Any]] = []
+    if isinstance(node, dict):
+        flat.append(node)
+        for child in node.get("children", []):
+            flat.extend(_flatten_findmnt_nodes(child))
+    elif isinstance(node, list):
+        for item in node:
+            flat.extend(_flatten_findmnt_nodes(item))
+    return flat
 
 
 def find_esp_mounts() -> List[Dict[str, Any]]:
     """
     Discovers all mounted EFI System Partitions (ESPs).
-    Uses findmnt or /proc/mounts to identify mounted vfat filesystems with EFI directories.
+    Uses findmnt, /proc/mounts, and /etc/fstab with privileged fallbacks for restricted mounts.
     Never assumes /boot or /efi is the ESP.
     """
     esps: List[Dict[str, Any]] = []
     checked_paths: Set[str] = set()
 
-    # 1. Try findmnt for vfat filesystems
+    # 1. Try findmnt (using -l flat mode first, then recursive tree fallback)
     if shutil.which("findmnt"):
-        try:
-            out = subprocess.check_output(
-                ["findmnt", "-t", "vfat", "-J"],
-                stderr=subprocess.DEVNULL,
-                text=True,
-                timeout=5,
-            )
-            data = json.loads(out)
-            fs_list = data.get("filesystems", [])
-            for fs in fs_list:
-                target = fs.get("target")
-                source = fs.get("source")
-                fstype = fs.get("fstype")
-                if target and target not in checked_paths:
-                    checked_paths.add(target)
-                    target_path = Path(target)
-                    # An ESP contains an EFI directory
-                    has_efi = (target_path / "EFI").is_dir() or (target_path / "efi").is_dir()
-                    free_space = 0
-                    try:
-                        st = os.statvfs(target)
-                        free_space = st.f_bavail * st.f_frsize
-                    except OSError:
-                        pass
-                    esps.append({
-                        "mountpoint": target,
-                        "source": source,
-                        "fstype": fstype,
-                        "has_efi_dir": has_efi,
-                        "free_space_bytes": free_space,
-                    })
-        except Exception:
-            pass
+        for findmnt_cmd in (["findmnt", "-l", "-t", "vfat", "-J"], ["findmnt", "-t", "vfat", "-J"]):
+            try:
+                out = subprocess.check_output(
+                    findmnt_cmd,
+                    stderr=subprocess.DEVNULL,
+                    text=True,
+                    timeout=5,
+                )
+                data = json.loads(out)
+                raw_list = data.get("filesystems", [])
+                fs_list = _flatten_findmnt_nodes(raw_list)
+
+                for fs in fs_list:
+                    target = fs.get("target")
+                    source = fs.get("source")
+                    fstype = fs.get("fstype", "vfat")
+                    if target and target not in checked_paths:
+                        checked_paths.add(target)
+                        target_path = Path(target)
+                        has_efi = (
+                            dir_exists_privileged(target_path / "EFI")
+                            or dir_exists_privileged(target_path / "efi")
+                            or target in ("/boot", "/efi", "/boot/efi")
+                        )
+                        free_space = 0
+                        try:
+                            st = os.statvfs(target)
+                            free_space = st.f_bavail * st.f_frsize
+                        except OSError:
+                            pass
+                        esps.append({
+                            "mountpoint": target,
+                            "source": source,
+                            "fstype": fstype,
+                            "has_efi_dir": has_efi,
+                            "free_space_bytes": free_space,
+                        })
+                if esps:
+                    break
+            except Exception:
+                pass
 
     # 2. Inspect /proc/mounts as fallback
-    if not esps and Path("/proc/mounts").is_file():
+    if Path("/proc/mounts").is_file():
         try:
             with open("/proc/mounts", "r", encoding="utf-8") as f:
                 for line in f:
@@ -75,7 +103,11 @@ def find_esp_mounts() -> List[Dict[str, Any]]:
                         if fstype in ("vfat", "msdos", "fat") and target not in checked_paths:
                             checked_paths.add(target)
                             target_path = Path(target)
-                            has_efi = (target_path / "EFI").is_dir() or (target_path / "efi").is_dir()
+                            has_efi = (
+                                dir_exists_privileged(target_path / "EFI")
+                                or dir_exists_privileged(target_path / "efi")
+                                or target in ("/boot", "/efi", "/boot/efi")
+                            )
                             free_space = 0
                             try:
                                 st = os.statvfs(target)
@@ -92,24 +124,42 @@ def find_esp_mounts() -> List[Dict[str, Any]]:
         except OSError:
             pass
 
-    # 3. Check well-known mount paths if still not found
+    # 3. Inspect /etc/fstab for configured vfat partitions
+    fstab = Path("/etc/fstab")
+    if fstab.is_file():
+        try:
+            content = fstab.read_text(encoding="utf-8", errors="ignore")
+            for line in content.splitlines():
+                line_s = line.strip()
+                if not line_s or line_s.startswith("#"):
+                    continue
+                parts = line_s.split()
+                if len(parts) >= 3:
+                    source, target, fstype = parts[0], parts[1], parts[2]
+                    if fstype in ("vfat", "fat") and target in ("/boot", "/efi", "/boot/efi") and target not in checked_paths:
+                        checked_paths.add(target)
+                        esps.append({
+                            "mountpoint": target,
+                            "source": source,
+                            "fstype": fstype,
+                            "has_efi_dir": True,
+                            "free_space_bytes": 0,
+                        })
+        except OSError:
+            pass
+
+    # 4. Check well-known mount paths if still empty
     for cand in ("/efi", "/boot/efi", "/boot"):
         c_path = Path(cand)
-        if c_path.is_dir() and cand not in checked_paths:
-            # Check if it has an EFI directory
-            if (c_path / "EFI").is_dir():
-                free_space = 0
-                try:
-                    st = os.statvfs(cand)
-                    free_space = st.f_bavail * st.f_frsize
-                except OSError:
-                    pass
+        if cand not in checked_paths and dir_exists_privileged(c_path):
+            has_efi = dir_exists_privileged(c_path / "EFI") or dir_exists_privileged(c_path / "efi") or cand in ("/boot", "/efi")
+            if has_efi:
                 esps.append({
                     "mountpoint": cand,
                     "source": "unknown",
                     "fstype": "vfat",
                     "has_efi_dir": True,
-                    "free_space_bytes": free_space,
+                    "free_space_bytes": 0,
                 })
                 checked_paths.add(cand)
 
@@ -295,10 +345,11 @@ def detect_installed_kernels() -> List[Dict[str, Any]]:
                 if k in installed_pkgs:
                     found_names.add(k)
                     vmlinuz = Path(f"/boot/vmlinuz-{k}")
+                    vmlinuz_exists = file_exists_privileged(vmlinuz)
                     kernels.append({
                         "name": k,
                         "package": k,
-                        "vmlinuz_path": str(vmlinuz) if vmlinuz.is_file() else None,
+                        "vmlinuz_path": str(vmlinuz) if vmlinuz_exists else None,
                         "type": "traditional",
                     })
         except Exception:
@@ -306,17 +357,16 @@ def detect_installed_kernels() -> List[Dict[str, Any]]:
 
     # 2. Inspect /boot for vmlinuz-* files
     boot_dir = Path("/boot")
-    if boot_dir.is_dir():
-        for vm in boot_dir.glob("vmlinuz-*"):
-            kname = vm.name.replace("vmlinuz-", "")
-            if kname not in found_names:
-                found_names.add(kname)
-                kernels.append({
-                    "name": kname,
-                    "package": kname,
-                    "vmlinuz_path": str(vm),
-                    "type": "traditional",
-                })
+    for vm in find_files_privileged(boot_dir, "vmlinuz-*"):
+        kname = vm.name.replace("vmlinuz-", "")
+        if kname not in found_names:
+            found_names.add(kname)
+            kernels.append({
+                "name": kname,
+                "package": kname,
+                "vmlinuz_path": str(vm),
+                "type": "traditional",
+            })
 
     return kernels
 
@@ -332,32 +382,26 @@ def detect_unified_kernel_images(esp_path: Optional[Path] = None) -> List[Dict[s
         search_dirs.append(esp_path / "EFI/Linux")
     for cand in ("/efi/EFI/Linux", "/boot/efi/EFI/Linux"):
         p = Path(cand)
-        if p.is_dir() and p not in search_dirs:
+        if p not in search_dirs:
             search_dirs.append(p)
 
     for sdir in search_dirs:
-        if sdir.is_dir():
-            for efi in sdir.glob("*.efi"):
-                has_linux_section = False
-                # Try objdump to verify UKI sections (.linux, .initrd, .cmdline)
-                if shutil.which("objdump"):
-                    try:
-                        out = subprocess.check_output(
-                            ["objdump", "-h", str(efi)],
-                            stderr=subprocess.DEVNULL,
-                            text=True,
-                            timeout=5,
-                        )
-                        if ".linux" in out:
-                            has_linux_section = True
-                    except Exception:
-                        pass
-                ukis.append({
-                    "name": efi.stem,
-                    "path": str(efi),
-                    "is_validated_uki": has_linux_section,
-                    "size_bytes": efi.stat().st_size,
-                })
+        for efi in find_files_privileged(sdir, "*.efi"):
+            has_linux_section = False
+            # Try objdump to verify UKI sections (.linux, .initrd, .cmdline)
+            if shutil.which("objdump"):
+                try:
+                    code, out, _ = run_privileged(["objdump", "-h", str(efi)])
+                    if code == 0 and ".linux" in out:
+                        has_linux_section = True
+                except Exception:
+                    pass
+            ukis.append({
+                "name": efi.stem,
+                "path": str(efi),
+                "is_validated_uki": has_linux_section,
+                "size_bytes": efi.stat().st_size if efi.exists() else 0,
+            })
     return ukis
 
 
@@ -378,6 +422,20 @@ def detect_windows() -> Dict[str, Any]:
     for esp in esps:
         esp_dir = Path(esp["mountpoint"])
         win_efi = esp_dir / WINDOWS_BOOTMGR_REL
+        if file_exists_privileged(win_efi):
+            result["detected"] = True
+            result["bootmgr_path"] = str(win_efi)
+            result["bitlocker_warning"] = True
+            break
+
+    # Also check well-known paths directly
+    for cand in ("/boot/EFI/Microsoft/Boot/bootmgfw.efi", "/efi/EFI/Microsoft/Boot/bootmgfw.efi"):
+        p = Path(cand)
+        if not result["detected"] and file_exists_privileged(p):
+            result["detected"] = True
+            result["bootmgr_path"] = str(p)
+            result["bitlocker_warning"] = True
+            break
         if win_efi.is_file():
             result["detected"] = True
             result["bootmgr_path"] = str(win_efi)

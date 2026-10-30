@@ -38,6 +38,7 @@ ICON_COLORS = {
     "health": "bold green",
     "recovery": "bold bright_red",
     "reports": "bold bright_green",
+    "settings": "bold cyan",
     "back": "bold red",
     "quit": "bold red",
 }
@@ -62,6 +63,7 @@ CATEGORY_COLORS = {
     "Signing": "bright_magenta",
     "Hooks": "bright_green",
     "Recovery": "bright_red",
+    "Settings": "cyan",
     "Navigation": "red",
     "Quit": "red",
 }

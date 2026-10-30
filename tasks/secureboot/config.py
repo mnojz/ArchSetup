@@ -49,13 +49,19 @@ EFIVAR_SETUP_MODE = f"SetupMode-{EFI_GLOBAL_GUID}"
 EFIVAR_PK = f"PK-{EFI_GLOBAL_GUID}"
 
 # ---------------------------------------------------------------------------
-# sbctl paths (Arch Linux default locations)
+# sbctl paths (discovers /var/lib/sbctl or legacy /usr/share/secureboot)
 # ---------------------------------------------------------------------------
-SBCTL_DB_DIR = Path("/usr/share/secureboot")
+def _resolve_sbctl_dir() -> Path:
+    for cand in (Path("/var/lib/sbctl"), Path("/usr/share/secureboot")):
+        if cand.is_dir():
+            return cand
+    return Path("/var/lib/sbctl")
+
+SBCTL_DB_DIR = _resolve_sbctl_dir()
 SBCTL_KEYS_DIR = SBCTL_DB_DIR / "keys"
 SBCTL_GUID_FILE = SBCTL_DB_DIR / "GUID"
 SBCTL_BUNDLES_DB = SBCTL_DB_DIR / "bundles.db"
-SBCTL_FILES_DB = SBCTL_DB_DIR / "files.db"
+SBCTL_FILES_DB = SBCTL_DB_DIR / "files.json"
 
 # ---------------------------------------------------------------------------
 # Secure Boot key databases (UEFI spec §32)

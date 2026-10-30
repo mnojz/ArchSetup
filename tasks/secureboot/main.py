@@ -183,6 +183,11 @@ def do_initial_setup(auto_confirm: bool = False) -> None:
     for f in failed:
         tui.log_error(f"Signing error: {f}")
 
+    if not signed and not failed:
+        tui.log_error("No bootloader or kernel binaries were discovered to sign.")
+        tui.log_info("Please ensure your EFI System Partition is mounted at /boot or /efi.")
+        return
+
     if failed:
         tui.log_error("One or more required boot files could not be signed. Halting before enrollment.")
         return
@@ -191,6 +196,11 @@ def do_initial_setup(auto_confirm: bool = False) -> None:
     ver = signing.verify_all_system_files()
     if not ver.get("all_verified", False):
         tui.log_error("Signature verification failed. Cannot proceed to firmware enrollment.")
+        for fpath, is_signed in ver.get("results", {}).items():
+            if not is_signed:
+                tui.log_warning(f"Unverified binary: {fpath}")
+        if ver.get("missing", []):
+            tui.log_warning(f"Missing binary files: {', '.join(ver['missing'])}")
         return
     tui.log_success(f"All {ver.get('verified_count', 0)} detected boot binaries verified successfully.")
 
@@ -302,6 +312,8 @@ def do_key_management() -> None:
                 ok, msg, _ = backup.create_full_backup("key_backup")
                 if ok:
                     tui.log_success(msg)
+                else:
+                    tui.log_error(msg)
 
 
 # ---------------------------------------------------------------------------
@@ -483,6 +495,20 @@ def do_recovery() -> None:
             )
         )
 
+    fixable = [i for i in issues if i.get("automatic_fix") and i.get("fix_action")]
+    if fixable:
+        tui.console.print()
+        if tui.prompt_yes_no(f"Apply automated recovery fix for {len(fixable)} actionable issue(s)?", default=True):
+            if auth.request_sudo_auth("Applying Secure Boot Recovery Fixes"):
+                for iss in fixable:
+                    action = iss["fix_action"]
+                    tui.log_running(f"Resolving: {iss['title']}...")
+                    ok, msg = recovery.apply_recovery_fix(action)
+                    if ok:
+                        tui.log_success(msg)
+                    else:
+                        tui.log_error(msg)
+
 
 # ---------------------------------------------------------------------------
 # Action: 9. Logs & Reports
@@ -505,6 +531,46 @@ def do_reports() -> None:
             padding=(0, 1),
         )
     )
+
+
+# ---------------------------------------------------------------------------
+# Action: 10. Settings & Preferences
+# ---------------------------------------------------------------------------
+def do_settings() -> None:
+    tui.show_step_header(1, 1, "Secure Boot Settings & Configuration")
+    width = tui.get_terminal_width()
+
+    table = Table(
+        title="[bold cyan]Secure Boot Configuration & Directories[/]",
+        box=box.ROUNDED,
+        border_style="cyan",
+        header_style="bold magenta",
+        width=width,
+        padding=(0, 1),
+        expand=True,
+    )
+    table.add_column("Parameter / Resource", style="bold white", width=30)
+    table.add_column("Resolved Path / Value", style="cyan", width=34)
+    table.add_column("Notes", style="dim")
+
+    table.add_row("sbctl Database Path", str(config.SBCTL_DB_DIR), "Primary keystore & files.json registry")
+    table.add_row("Secure Boot Keys", str(config.SBCTL_KEYS_DIR), "Root-protected signing keys (0700/0600)")
+    table.add_row("ArchSetup State Directory", str(config.STATE_DIR), "Journal, operation logs, and snapshots")
+    table.add_row("Pacman Signing Hook", str(config.SBCTL_PACMAN_HOOK), "Auto-resign hook for kernel updates")
+    table.add_row("Dual-Boot Preservation", "Preserve Windows bootmgfw", "Never overwrites or alters Windows EFI")
+
+    tui.console.print(table)
+    tui.console.print()
+
+    if tui.prompt_yes_no("Export public X.509 certificates (.pem) to /tmp/secureboot_certs?", default=False):
+        dest = Path("/tmp/secureboot_certs")
+        ok, exported = keys.export_certificates(dest)
+        if ok:
+            tui.log_success(f"Exported {len(exported)} certificate(s) to [white]{dest}[/]:")
+            for exp in exported:
+                tui.log_dim(f"• {exp}")
+        else:
+            tui.log_warning("No public certificates found on disk to export.")
 
 
 # ---------------------------------------------------------------------------
@@ -602,6 +668,15 @@ def run(auto_confirm: bool = False) -> bool:
             "details": "Compiles firmware variables, disk layout, signatures, and health status into persistent report files."
         },
         {
+            "id": "settings",
+            "icon": "󰒓",
+            "title": "Settings & Configuration",
+            "tag": "Settings",
+            "sudo": False,
+            "desc": "Manage module defaults, backup retention, and certificate exports.",
+            "details": "Inspect storage paths, export public X.509 certificates, and review security policies."
+        },
+        {
             "id": "back",
             "icon": "󰌍",
             "title": "Back to Main Menu",
@@ -643,6 +718,8 @@ def run(auto_confirm: bool = False) -> bool:
                 do_recovery()
             elif choice == "reports":
                 do_reports()
+            elif choice == "settings":
+                do_settings()
         except KeyboardInterrupt:
             tui.console.print()
             tui.log_warning("Operation cancelled by user.")
