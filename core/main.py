@@ -32,6 +32,7 @@ from tasks import (
     dotfiles_deploy,
     system_configuration,
     pacman_tuning,
+    secureboot,
 )
 
 def load_manifest() -> Tuple[Path, List[Dict[str, Any]]]:
@@ -158,6 +159,10 @@ def do_view_log():
     else:
         tui.log_info(f"Log directory: [white]{logger.log_path_str}[/]")
         tui.log_warning("No previous non-empty installation logs found.")
+
+def do_secureboot():
+    """Launches the interactive Secure Boot management subsystem."""
+    secureboot.run()
 
 def do_packages(categories: List[Dict[str, Any]]):
     """Audits installed packages against manifest and offers selective install."""
@@ -437,6 +442,15 @@ def main():
             "details": "Displays the last 35 lines of the most recent setup session log file inside a styled preview card, including exact command outputs and timestamps."
         },
         {
+            "id": "secureboot",
+            "icon": "󰌾",
+            "title": "Secure Boot Management",
+            "tag": "Security",
+            "sudo": True,
+            "desc": "Complete Secure Boot lifecycle: keys, signing, enrollment, and health checks.",
+            "details": "Modular sbctl-powered orchestrator: UEFI preflight inspection, key generation, bootloader/kernel signing, Windows dual-boot preservation, update hooks, and recovery."
+        },
+        {
             "id": "quit",
             "icon": "󰈆",
             "title": "Exit Setup",
@@ -483,6 +497,8 @@ def main():
                 do_clean_cache()
             elif choice == "log":
                 do_view_log()
+            elif choice == "secureboot":
+                do_secureboot()
         except KeyboardInterrupt:
             tui.console.print()
             tui.log_warning("Operation interrupted by user.")

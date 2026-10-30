@@ -35,6 +35,7 @@ ArchSetup features a fully interactive keyboard-driven TUI engine built with nat
 │   󰏔  Deploy User Dotfiles            │ Personalization    │    User    │
 │   󰘚  Desktop & MIME Integration      │ Desktop Fix        │    User    │
 │   󰒓  System Tuning & Bootloader      │ Hardware & Boot    │    Sudo    │
+│   󰌾  Secure Boot Management          │ Security           │    Sudo    │
 │   󰃢  Maintenance Cache Cleanup       │ Maintenance        │    Sudo    │
 │   󰈙  View Installation Logs          │ Logging            │    User    │
 │   󰈆  Exit Setup                      │ Quit               │    User    │
@@ -130,6 +131,69 @@ ArchSetup was audited and tested specifically to prevent common post-install fai
 > [!WARNING]
 > **Display Server Protection**  
 > Restarting SDDM from inside an active graphical session terminates your Wayland compositor and abruptly kills your terminal window. ArchSetup detects active `$WAYLAND_DISPLAY` or `$DISPLAY` environments and defers display manager restarts to the final system reboot.
+
+---
+
+## 🔒 Secure Boot Lifecycle Management
+
+ArchSetup includes a modular Secure Boot management subsystem powered by `sbctl`, providing complete lifecycle control from firmware inspection to automatic update re-signing:
+
+```text
+                    ◆ Secure Boot Management ◆
+╭──────────────────────────────────────┬────────────────────┬────────────╮
+│ Action                               │ Category           │ Privilege  │
+├──────────────────────────────────────┼────────────────────┼────────────┤
+│ ▸ 󰍹  System Overview                │ Inspection         │    User    │
+│   󰌌  Initial Secure Boot Setup      │ Setup              │    Sudo    │
+│   󰌆  Key Management                 │ Keys               │    Sudo    │
+│   󰒓  Bootloader Management          │ Boot               │    Sudo    │
+│   󰏗  Kernel & EFI Signing           │ Signing            │    Sudo    │
+│   󰓦  Update Automation              │ Hooks              │    Sudo    │
+│   󰓅  Health Check                   │ Diagnostics        │    User    │
+│   󰣐  Recovery Center                │ Recovery           │    User    │
+│   󰈙  Logs & Diagnostic Reports      │ Logging            │    User    │
+│   󰌍  Back to Main Menu              │ Navigation         │    User    │
+╰──────────────────────────────────────┴────────────────────┴────────────╯
+```
+
+### 1. Initial Setup Workflow
+1. **Firmware Preparation**: Boot into your UEFI/BIOS settings (F2/Del) and clear Secure Boot keys or select **Enter Setup Mode**.
+2. **Launch Setup**: Open ArchSetup, navigate to `Secure Boot Management`, and select `Initial Secure Boot Setup`.
+3. **Key Generation**: Custom PK (Platform Key), KEK (Key Exchange Key), and db (Signature Database) key-pairs are generated and stored with restricted permissions (`0600`/`0700`).
+4. **Binary Signing**: The active bootloader and all installed kernels/UKIs are automatically discovered, registered, signed, and cryptographically verified.
+5. **Update Integration**: A pacman post-transaction hook (`/etc/pacman.d/hooks/99-sbctl-resign.hook`) is installed to automatically re-sign boot files whenever `linux`, `systemd`, or `sbctl` packages update.
+6. **Firmware Enrollment**: Custom keys are enrolled into firmware NVRAM via `sbctl enroll-keys` (with Microsoft certificate support for Windows dual-boot).
+7. **Firmware Activation**: Reboot into BIOS settings, toggle Secure Boot to **[Enabled]**, save settings, and boot into Arch Linux.
+
+### 2. Windows Dual-Boot & BitLocker Compatibility
+ArchSetup automatically detects Windows installations (`EFI/Microsoft/Boot/bootmgfw.efi`):
+- **Microsoft Certificate Enrollment**: Microsoft Production PCA and UEFI CA certificates are enrolled alongside custom keys (`sbctl enroll-keys --microsoft`) to preserve Windows bootability and third-party Option ROMs.
+- **Never Touches Windows Binaries**: Windows EFI executables are strictly protected and never modified or re-signed.
+
+> [!CAUTION]
+> **BitLocker Recovery Key Warning**  
+> Enrolling custom Secure Boot keys modifies TPM PCR 7 measurements. If your Windows partition utilizes BitLocker drive encryption, Windows may request your BitLocker recovery key upon boot.  
+> **Always retrieve and safely print or record your 48-digit BitLocker recovery key from [account.microsoft.com/devices/recoverykey](https://account.microsoft.com/devices/recoverykey) before enrolling firmware keys!** Alternatively, suspend BitLocker protection from Windows before setup.
+
+### 3. Kernel and UKI Handling
+- **Traditional Kernels (`vmlinuz`)**: The kernel executable is signed and registered. ArchSetup alerts the user that traditional separate `initramfs` and kernel command-line arguments are not authenticated by the kernel signature alone.
+- **Unified Kernel Images (UKIs)**: Full PE/COFF structures containing kernel, initramfs, and cmdline are authenticated end-to-end.
+- **Multi-Kernel Support**: Automatically detects and signs `linux`, `linux-lts`, `linux-zen`, and `linux-hardened`.
+
+### 4. Supported Bootloader Adapters
+| Bootloader | Status | Integration Details |
+|---|---|---|
+| **systemd-boot** | Supported | Full binary signing (`systemd-bootx64.efi`), fallback `BOOTX64.EFI`, and `.efi.signed` update hook integration |
+| **GRUB** | Supported | Standalone binary signing (`grubx64.efi`) with signature enforcement advisory notices |
+| **rEFInd** | Supported | Main manager binary (`refind_x64.efi`) and filesystem driver signing (`drivers_x64/*.efi`) |
+| **Limine** | Supported | Limine EFI binary signing and configuration tracking |
+
+### 5. Running Automated Tests
+The Secure Boot test suite includes comprehensive mocked firmware interfaces:
+
+```bash
+python3 -m unittest tests/test_secureboot.py
+```
 
 ---
 

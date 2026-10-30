@@ -2,7 +2,7 @@
 TerminalApplication=kitty
 
 [Icons]
-Theme=Colloid-Dark
+Theme=Frost
 
 [KDE]
 ShowDeleteCommand=false
@@ -13,6 +13,8 @@ Allow Expansion=false
 Automatically select filename extension=true
 Breadcrumb Navigation=true
 Decoration position=2
+Places Icons Auto-resize=false
+Places Icons Static Size=22
 Show Full Path=false
 Show Inline Previews=true
 Show Speedbar=true
@@ -21,7 +23,7 @@ Sort by=Name
 Sort directories first=true
 Sort hidden files last=false
 Sort reversed=false
-Speedbar Width=158
+Speedbar Width=190
 View Style=DetailTree
 
 [PreviewSettings]

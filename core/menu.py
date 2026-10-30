@@ -28,6 +28,17 @@ ICON_COLORS = {
     "system": "bold bright_cyan",
     "cleanup": "bold bright_red",
     "log": "bold bright_green",
+    "secureboot": "bold bright_yellow",
+    "overview": "bold cyan",
+    "initial_setup": "bold bright_yellow",
+    "keys": "bold bright_cyan",
+    "bootloader": "bold bright_blue",
+    "signing": "bold bright_magenta",
+    "updates": "bold bright_green",
+    "health": "bold green",
+    "recovery": "bold bright_red",
+    "reports": "bold bright_green",
+    "back": "bold red",
     "quit": "bold red",
 }
 
@@ -43,6 +54,15 @@ CATEGORY_COLORS = {
     "Hardware & Boot": "bright_cyan",
     "Maintenance": "bright_red",
     "Logging": "bright_green",
+    "Security": "bright_yellow",
+    "Inspection": "cyan",
+    "Setup": "bright_yellow",
+    "Keys": "bright_cyan",
+    "Boot": "bright_blue",
+    "Signing": "bright_magenta",
+    "Hooks": "bright_green",
+    "Recovery": "bright_red",
+    "Navigation": "red",
     "Quit": "red",
 }
 

@@ -11,6 +11,7 @@ from tasks import (
     ambxst_shell,
     dotfiles_deploy,
     system_configuration,
+    secureboot,
 )
 
 __all__ = [
@@ -22,4 +23,5 @@ __all__ = [
     "ambxst_shell",
     "dotfiles_deploy",
     "system_configuration",
+    "secureboot",
 ]

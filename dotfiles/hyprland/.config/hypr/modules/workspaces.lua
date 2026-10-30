@@ -109,6 +109,17 @@ hl.window_rule({
     size   = "1060 710",
 })
 
+-- make dolphin dialogs floating
+hl.window_rule({
+    name   = "dolphin-dialogs",
+    match  = {
+        class = "org.kde.dolphin",
+        title = "^(Progress Dialog|Copying.*|Moving.*|Properties for.*|Configure.*)$"
+    },
+    center = true,
+    float  = true,
+})
+
 ---- layer rules
 
 hl.layer_rule({

@@ -56,6 +56,8 @@
         "cava",
         "gpu-screen-recorder",
         "ffmpegthumbnailer",
+        "kdegraphics-thumbnailers",
+        "kimageformats",
         "resvg",
         "eog"
       ]
@@ -76,6 +78,7 @@
         "evince",
         "file-roller",
         "ark",
+        "kio-admin",
         "pdfarranger",
         "qbittorrent",
         "gaphor",

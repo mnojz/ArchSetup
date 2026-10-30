@@ -1,17 +1,71 @@
 MenuBar=Disabled
 
+[CompactMode]
+IconSize=22
+PreviewSize=24
+UseSystemFont=true
+
+[DetailsMode]
+ColumnPositions=0,1,2,3,4,5,6,7,8
+ExpandableFolders=false
+HighlightEntireRow=true
+IconSize=22
+LeftPadding=16
+PreviewSize=32
+RightPadding=16
+UseSystemFont=true
+
 [General]
+AutoExpandFolders=false
+BrowseThroughArchives=true
+ConfirmClosingMultipleTabs=true
+ConfirmClosingTerminalRunningProgram=true
+EnlargeSmallPreviews=true
+FilterBar=false
+GlobalViewProps=true
+LockPanels=true
+OpenExternallyCalledFolderInNewTab=true
+OpenNewTabAfterLastTab=false
 RememberOpenedTabs=false
+RenameInline=true
+ShowCloseButtonOnTabs=true
+ShowFullPath=false
+ShowFullPathInTitlebar=false
+ShowPasteBarAfterCopying=true
 ShowSelectionToggle=false
+ShowStatusBar=Disabled
+ShowToolTips=false
+ShowZoomSlider=false
+SortingChoice=0
+SplitView=false
+TabStyle=AutoSize
+UrlCompletionMode=1
 Version=202
-ViewPropsTimestamp=2026,5,12,22,58,55.839
 
 [IconsMode]
-PreviewSize=160
+IconSize=64
+MaximumTextLines=2
+PreviewSize=112
+TextWidthIndex=1
+UseSystemFont=true
 
 [KFileDialog Settings]
+Allow Expansion=false
+Automatically select filename extension=true
+Breadcrumb Navigation=true
+Decoration position=2
 Places Icons Auto-resize=false
 Places Icons Static Size=22
+Show Full Path=false
+Show Inline Previews=true
+Show Speedbar=true
+Show hidden files=false
+Sort by=Name
+Sort directories first=true
+Sort hidden files last=false
+Sort reversed=false
+Speedbar Width=190
+View Style=DetailTree
 
 [MainWindow]
 MenuBar=Disabled
@@ -20,7 +74,9 @@ MenuBar=Disabled
 ToolButtonStyle=IconOnly
 
 [PreviewSettings]
-Plugins=ffmpegthumbnailer,appimagethumbnail,audiothumbnail,glycin-heif,evince,comicbookthumbnail,cursorthumbnail,djvuthumbnail,ebookthumbnail,exrthumbnail,imagethumbnail,glycin-image-rs,jpegthumbnail,glycin-jxl,kraorathumbnail,windowsexethumbnail,windowsimagethumbnail,opendocumentthumbnail,glycin-svg,svgthumbnail
+EnableRemoteFolderThumbnail=false
+MaximumRemoteSize=52428800
+Plugins=appimagethumbnail,audiothumbnail,comicbookthumbnail,cursorthumbnail,djvuthumbnail,ebookthumbnail,evince,exrthumbnail,ffmpegthumbnailer,glycin-heif,glycin-image-rs,glycin-jxl,glycin-svg,imagethumbnail,jpegthumbnail,kraorathumbnail,opendocumentthumbnail,svgthumbnail,windowsexethumbnail,windowsimagethumbnail
 
 [Search]
 Location=Everywhere

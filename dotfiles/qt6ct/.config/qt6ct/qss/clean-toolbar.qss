@@ -1,0 +1,13 @@
+/* Remove dropdown menu arrows from toolbar buttons (backward, forward, etc.) */
+QToolButton::menu-indicator {
+    image: none;
+    width: 0px;
+    height: 0px;
+}
+
+QToolButton::menu-arrow {
+    image: none;
+    width: 0px;
+    height: 0px;
+}
+
