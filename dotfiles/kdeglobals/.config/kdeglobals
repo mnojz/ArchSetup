@@ -2,7 +2,7 @@
 TerminalApplication=kitty
 
 [Icons]
-Theme=Frost
+Theme=Colloid-Catppuccin
 
 [KDE]
 ShowDeleteCommand=false

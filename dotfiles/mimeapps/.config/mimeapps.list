@@ -1,4 +1,5 @@
 [Added Associations]
+application/json=Neovim-2.desktop;
 application/pdf=evince.desktop;evince-2.desktop;brave-origin.desktop;
 audio/mp4=io.bassi.Amberol.desktop;org.gnome.Decibels.desktop;
 audio/mpeg=io.bassi.Amberol.desktop;
@@ -13,6 +14,7 @@ video/webm=io.github.diegopvlk.Cine.desktop;
 video/x-matroska=io.github.diegopvlk.Cine.desktop;
 
 [Default Applications]
+application/json=Neovim-2.desktop;
 application/pdf=evince.desktop;
 audio/mp4=io.bassi.Amberol.desktop;
 audio/mpeg=io.bassi.Amberol.desktop;
