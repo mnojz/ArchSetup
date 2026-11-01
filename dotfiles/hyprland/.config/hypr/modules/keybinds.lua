@@ -21,7 +21,7 @@ hl.bind(mainMod .. " + B",      hl.dsp.exec_cmd("xdg-open https://"))
 hl.bind(mainMod .. " + TAB",    hl.dsp.focus({ workspace = "e+1" }))
 
 ---- AMBXST SHELL SHORTCUTS ----
-hl.bind(mainMod .. " + SHIFT + C", hl.dsp.exec_cmd("hyprpicker -a --notify --disable-preview --scale=10 --radius=40"))
+hl.bind(mainMod .. " + SHIFT + C", hl.dsp.exec_cmd("ambxst colorpicker"))
 hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd("ambxst run screenrecord"))
 hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("ambxst run screenshot"))
 hl.bind(mainMod .. " + SHIFT + A", hl.dsp.exec_cmd("ambxst run lens"))

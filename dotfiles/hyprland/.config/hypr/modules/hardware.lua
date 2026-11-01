@@ -47,6 +47,7 @@ hl.config({
 
 -- Touchpad device configuration
 local TOUCHPAD_NAME = "elan0307:00-04f3:3282-touchpad"
+local COLOR_ACCENT = "#95bcfb"   -- Catppuccin Sky Blue / Desktop Accent
 local touchpad_enabled = true
 
 hl.device({
@@ -54,6 +55,31 @@ hl.device({
     accel_profile = "flat",
     sensitivity   = 0.5,
 })
+
+-- Render custom SVG icon with dynamic accent color into RAM tmpfs
+local function prepare_touchpad_icon(enabled)
+    local icon_file = enabled and "touchpad.svg" or "touchpad-disabled.svg"
+    local home = os.getenv("HOME") or "/home/manoj"
+    local template_path = home .. "/.config/hypr/icons/" .. icon_file
+    local runtime_dir = os.getenv("XDG_RUNTIME_DIR") or "/tmp"
+    local out_path = runtime_dir .. "/touchpad_" .. (enabled and "enabled" or "disabled") .. ".svg"
+
+    local f = io.open(template_path, "r")
+    if f then
+        local content = f:read("*a")
+        f:close()
+        if content then
+            local colored = content:gsub("{COLOR}", COLOR_ACCENT)
+            local out_f = io.open(out_path, "w")
+            if out_f then
+                out_f:write(colored)
+                out_f:close()
+                return out_path
+            end
+        end
+    end
+    return enabled and "input-touchpad-symbolic" or "touchpad-disabled-symbolic"
+end
 
 -- Touchpad toggle function
 function M.touchpad_toggle()
@@ -63,7 +89,11 @@ function M.touchpad_toggle()
         enabled = touchpad_enabled,
     })
     local status_text = touchpad_enabled and "enabled" or "disabled"
-    hl.exec_cmd("notify-send -a 'Device' -i 'input-touchpad-symbolic' -u low -t 2000 'Touchpad' '" .. status_text .. "'")
+    local icon_path = prepare_touchpad_icon(touchpad_enabled)
+    hl.exec_cmd(string.format(
+        "notify-send -a 'Device' -i '%s' -u low -t 2000 -h string:x-canonical-private-synchronous:touchpad 'Touchpad' '%s'",
+        icon_path, status_text
+    ))
 end
 
 ---- GESTURES ----
