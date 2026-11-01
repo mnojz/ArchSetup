@@ -2,7 +2,7 @@ MenuBar=Disabled
 
 [CompactMode]
 IconSize=22
-PreviewSize=24
+PreviewSize=22
 UseSystemFont=true
 
 [DetailsMode]
@@ -29,13 +29,10 @@ OpenNewTabAfterLastTab=false
 RememberOpenedTabs=false
 RenameInline=true
 ShowCloseButtonOnTabs=true
-ShowFullPath=false
 ShowFullPathInTitlebar=false
 ShowPasteBarAfterCopying=true
 ShowSelectionToggle=false
-ShowStatusBar=Disabled
 ShowToolTips=false
-ShowZoomSlider=false
 SortingChoice=0
 SplitView=false
 TabStyle=AutoSize
@@ -76,7 +73,7 @@ ToolButtonStyle=IconOnly
 [PreviewSettings]
 EnableRemoteFolderThumbnail=false
 MaximumRemoteSize=52428800
-Plugins=appimagethumbnail,audiothumbnail,comicbookthumbnail,cursorthumbnail,djvuthumbnail,ebookthumbnail,evince,exrthumbnail,ffmpegthumbnailer,glycin-heif,glycin-image-rs,glycin-jxl,glycin-svg,imagethumbnail,jpegthumbnail,kraorathumbnail,opendocumentthumbnail,svgthumbnail,windowsexethumbnail,windowsimagethumbnail
+Plugins=ffmpegthumbnailer,glycin-image-rs,appimagethumbnail,audiothumbnail,glycin-heif,evince,comicbookthumbnail,cursorthumbnail,djvuthumbnail,ebookthumbnail,exrthumbnail,imagethumbnail,jpegthumbnail,glycin-jxl,kraorathumbnail,windowsexethumbnail,windowsimagethumbnail,opendocumentthumbnail,glycin-svg,svgthumbnail
 
 [Search]
 Location=Everywhere

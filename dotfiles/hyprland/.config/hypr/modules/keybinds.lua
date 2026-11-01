@@ -1,6 +1,6 @@
 ---- MY PROGRAMS ----
 local terminal    = "kitty"
-local fileManager = "dolphin"
+local fileManager = "nautilus"
 
 ---- scripts collection ----
 local scripts     = require("modules.scripts")
