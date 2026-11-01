@@ -38,9 +38,9 @@ hl.config({
         wobble = {
             enabled = true,
             mesh = 32,
-            stiffness = 150,
-            damping = 15,
-            mass = 1,
+            stiffness = 140,
+            damping = 10,
+            mass = 0.6,
             intensity = 0.9,
         },
     },
