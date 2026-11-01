@@ -43,7 +43,8 @@
         "flatpak",
         "xdg-user-dirs",
         "plymouth",
-        "libnotify"
+        "libnotify",
+        "wtype"
       ]
     },
     {
