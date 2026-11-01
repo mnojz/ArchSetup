@@ -4,6 +4,7 @@ local fileManager = "nautilus"
 
 ---- scripts collection ----
 local scripts     = require("modules.scripts")
+local power       = require("modules.power")
 
 
 ---- KEYBINDINGS ----
@@ -99,4 +100,4 @@ hl.bind(mainMod .. " + CTRL + F24", scripts.touchpad_toggle)
 hl.bind(mainMod .. " + ALT + mouse:272", scripts.dragStart)
 hl.bind(mainMod .. " + ALT + mouse:272", scripts.dragEnd, { release = true })
 
-hl.bind("XF86Tools", scripts.toggle_refresh_rate)
+hl.bind("XF86Tools", power.toggle)
