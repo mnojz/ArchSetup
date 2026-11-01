@@ -24,7 +24,8 @@
         "pacseek",
         "peaclock",
         "unimatrix",
-        "stow"
+        "stow",
+        "jq"
       ]
     },
     {
@@ -41,7 +42,8 @@
         "gnome-keyring",
         "flatpak",
         "xdg-user-dirs",
-        "plymouth"
+        "plymouth",
+        "libnotify"
       ]
     },
     {
