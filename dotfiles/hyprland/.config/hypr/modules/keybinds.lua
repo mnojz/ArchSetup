@@ -22,7 +22,7 @@ hl.bind(mainMod .. " + SHIFT + C", hl.dsp.exec_cmd("hyprpicker -a --notify --dis
 hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd("ambxst run screenrecord"))
 hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("ambxst run screenshot"))
 hl.bind(mainMod .. " + SHIFT + A", hl.dsp.exec_cmd("ambxst run lens"))
-hl.bind(mainMod .. " + Super_L", hl.dsp.exec_cmd("ambxst run dashboard"))
+hl.bind(mainMod .. " + Super_L", hl.dsp.exec_cmd("ambxst run dashboard"), { release = true })
 hl.bind(mainMod .. " + ESCAPE", hl.dsp.exec_cmd("ambxst run powermenu"))
 hl.bind(mainMod .. " + PERIOD", hl.dsp.exec_cmd("ambxst run emoji"))
 hl.bind(mainMod .. " + COMMA", hl.dsp.exec_cmd("ambxst run wallpapers"))
@@ -96,7 +96,7 @@ hl.bind("XF86AudioPrev", hl.dsp.exec_cmd("playerctl previous"), { locked = true 
 -- custom made function.
 hl.bind(mainMod .. " + CTRL + F24", scripts.touchpad_toggle)
 
-hl.bind(mainMod .. " + ALT + mouse:272", scripts.dragStart, { mouse = true })
-hl.bind(mainMod .. " + ALT + mouse:272", scripts.dragEnd, { mouse = true, release = true })
+hl.bind(mainMod .. " + ALT + mouse:272", scripts.dragStart)
+hl.bind(mainMod .. " + ALT + mouse:272", scripts.dragEnd, { release = true })
 
 hl.bind("XF86Tools", scripts.toggle_refresh_rate)
