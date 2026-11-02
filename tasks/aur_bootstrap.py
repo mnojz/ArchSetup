@@ -15,6 +15,10 @@ def run(auto_confirm: bool = False) -> bool:
         log_success(f"{aur_tool} AUR helper is already installed and ready")
         return True
 
+    if not pm.prepare_transaction():
+        log_error("System upgrade failed; stopping AUR bootstrap.")
+        return False
+
     log_running("Installing build prerequisites (git, base-devel)...")
     code, _ = logger.run_cmd(
         ["sudo", "pacman", "-S", "--needed", "--noconfirm", "git", "base-devel"],

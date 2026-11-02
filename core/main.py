@@ -5,6 +5,7 @@ Pure interactive post-installation suite for Arch Linux + Hyprland.
 """
 
 import os
+import getpass
 import sys
 import json
 import shutil
@@ -130,17 +131,17 @@ def do_clean_cache():
     if orphans:
         tui.log_info(f"Found {len(orphans)} orphaned package(s): {', '.join(orphans[:10])}")
         if tui.prompt_yes_no("Remove orphaned packages?", default=True):
-            logger.run_cmd(["sudo", "pacman", "-Rns", "--noconfirm"] + orphans, check=False)
+            logger.run_cmd(["sudo", "pacman", "-Rns", "--noconfirm"] + orphans)
             tui.log_success("Orphaned packages removed")
     else:
         tui.log_success("No orphaned packages found")
 
     tui.log_running("Cleaning pacman cache...")
-    logger.run_cmd(["sudo", "pacman", "-Sc", "--noconfirm"], check=False)
+    logger.run_cmd(["sudo", "pacman", "-Sc", "--noconfirm"])
     aur_tool = pm.get_aur_helper()
     if aur_tool:
         tui.log_running(f"Cleaning {aur_tool} cache...")
-        logger.run_cmd([aur_tool, "-Sc", "--noconfirm"], check=False)
+        logger.run_cmd([aur_tool, "-Sc", "--noconfirm"])
     tui.log_success("Package cache cleaned successfully")
 
 def do_view_log():
@@ -199,7 +200,9 @@ def do_packages(categories: List[Dict[str, Any]]):
         if not auth.request_sudo_auth("Installing Missing Packages"):
             tui.log_warning("Installation cancelled: Sudo authorization not granted.")
             return
-        aur_bootstrap.run()
+        if not aur_bootstrap.run():
+            tui.log_error("AUR bootstrap failed; package installation stopped.")
+            return
         package_installer.install_package_batch("Missing Packages", all_missing)
         tui.show_summary_panel(pm.success_packages, pm.skipped_packages, pm.failed_packages, logger.log_path_str)
 
@@ -236,7 +239,9 @@ def do_checklist(categories: List[Dict[str, Any]], user: str, host: str, kernel:
         if not auth.request_sudo_auth("Installing Selected Categories"):
             tui.log_warning("Installation cancelled: Sudo authorization not granted.")
             return
-        aur_bootstrap.run()
+        if not aur_bootstrap.run():
+            tui.log_error("AUR bootstrap failed; package installation stopped.")
+            return
         package_installer.install_package_batch("Selected Categories", missing)
         tui.show_summary_panel(pm.success_packages, pm.skipped_packages, pm.failed_packages, logger.log_path_str)
 
@@ -245,12 +250,12 @@ def do_full(manifest_path: Path, categories: List[Dict[str, Any]]):
     def has_network() -> bool:
         import socket
         try:
-            socket.create_connection(("1.1.1.1", 53), timeout=3)
-            return True
+            with socket.create_connection(("1.1.1.1", 53), timeout=3):
+                return True
         except OSError:
             try:
-                socket.create_connection(("8.8.8.8", 53), timeout=3)
-                return True
+                with socket.create_connection(("8.8.8.8", 53), timeout=3):
+                    return True
             except OSError:
                 return False
 
@@ -265,48 +270,29 @@ def do_full(manifest_path: Path, categories: List[Dict[str, Any]]):
         tui.log_warning("Full installation cancelled: Sudo authorization not granted.")
         return
 
-    TOTAL_STEPS = 8
-    current_step = 1
-
-    # Step 1: Pacman Turbo Boost
-    tui.show_step_header(current_step, TOTAL_STEPS, "Pacman Parallel Downloads & Visuals Tuning")
-    pacman_tuning.run()
-    current_step += 1
-
-    # Step 2: AUR Helper
-    tui.show_step_header(current_step, TOTAL_STEPS, "AUR Package Manager Bootstrap")
-    aur_bootstrap.run()
-    current_step += 1
-
-    # Step 3: Mirrors
-    tui.show_step_header(current_step, TOTAL_STEPS, "Mirrorlist Optimization")
-    mirror_ranking.run()
-    current_step += 1
-
-    # Step 4: Packages
-    tui.show_step_header(current_step, TOTAL_STEPS, "Software Packages Installation")
-    tui.show_manifest_table(categories)
-    package_installer.run(manifest_path, categories_list=categories)
-    current_step += 1
-
-    # Step 5: Desktop & MIME
-    tui.show_step_header(current_step, TOTAL_STEPS, "Desktop & MIME Integration")
-    desktop_integration.run()
-    current_step += 1
-
-    # Step 6: Ambxst Shell
-    tui.show_step_header(current_step, TOTAL_STEPS, "Ambxst Shell Environment")
-    ambxst_shell.run()
-    current_step += 1
-
-    # Step 7: Dotfiles
-    tui.show_step_header(current_step, TOTAL_STEPS, "Bundled User Dotfiles & Styling")
-    dotfiles_deploy.run()
-    current_step += 1
-
-    # Step 8: System Tuning
-    tui.show_step_header(current_step, TOTAL_STEPS, "System Configuration & Hardware Tuning")
-    system_configuration.run(PROJECT_ROOT / "assets")
+    steps = [
+        ("Pacman Parallel Downloads & Visuals Tuning", pacman_tuning.run),
+        ("AUR Package Manager Bootstrap", aur_bootstrap.run),
+        ("Mirrorlist Optimization", mirror_ranking.run),
+        ("Software Packages Installation", lambda: package_installer.run(manifest_path, categories_list=categories)),
+        ("Desktop & MIME Integration", desktop_integration.run),
+        ("Ambxst Shell Environment", ambxst_shell.run),
+        ("Bundled User Dotfiles & Styling", dotfiles_deploy.run),
+        ("System Configuration & Hardware Tuning", lambda: system_configuration.run(PROJECT_ROOT / "assets")),
+    ]
+    for index, (title, action) in enumerate(steps, 1):
+        tui.show_step_header(index, len(steps), title)
+        if index == 4:
+            tui.show_manifest_table(categories)
+        try:
+            succeeded = action()
+        except (OSError, subprocess.SubprocessError) as exc:
+            tui.log_error(f"{title} failed: {exc}")
+            succeeded = False
+        if not succeeded:
+            tui.log_error(f"Installation stopped at: {title}. Remaining phases skipped; no reboot will be offered.")
+            tui.show_summary_panel(pm.success_packages, pm.skipped_packages, pm.failed_packages, logger.log_path_str)
+            return False
 
     # Post-Hooks
     if shutil_which := shutil.which("xdg-user-dirs-update"):
@@ -324,9 +310,10 @@ def do_full(manifest_path: Path, categories: List[Dict[str, Any]]):
 
     if tui.prompt_yes_no("Reboot system now to apply kernel, boot, and theme changes?", default=False):
         tui.log_running("Rebooting system...")
-        subprocess.run(["sudo", "reboot"])
+        subprocess.run(["sudo", "reboot"], check=True)
     else:
         tui.log_info("Reboot postponed. Enjoy your new Arch Linux + Hyprland setup!")
+    return True
 
 
 def main():
@@ -335,7 +322,7 @@ def main():
         sys.exit(1)
 
     # System metadata
-    user = os.environ.get("USER", os.getlogin() if hasattr(os, "getlogin") else "user")
+    user = getpass.getuser()
     host = platform.node()
     kernel = platform.release()
 
@@ -394,7 +381,7 @@ def main():
             "tag": "Networking",
             "sudo": True,
             "desc": "Benchmarks and ranks fastest pacman mirrors via rate-mirrors.",
-            "details": "Tests speed and latency of worldwide Arch mirrors, applies the fastest mirrors to /etc/pacman.d/mirrorlist, and synchronizes package databases."
+            "details": "Tests speed and latency of worldwide Arch mirrors, applies the fastest mirrors to /etc/pacman.d/mirrorlist, without independently refreshing package databases."
         },
         {
             "id": "dotfiles",
@@ -403,7 +390,7 @@ def main():
             "tag": "Personalization",
             "sudo": False,
             "desc": "Deploys bundled Hyprland, Kitty, Fish, and desktop dotfiles via GNU Stow.",
-            "details": "Links bundled user dotfiles directly into $HOME using GNU Stow. Edits made in ~/.config automatically stay in sync with the ArchSetup dotfiles module."
+            "details": "Links bundled dotfiles into $HOME using GNU Stow, replacing conflicting local configs with repository versions. Edits in ~/.config stay in sync with this repository."
         },
         {
             "id": "desktop",
@@ -474,6 +461,7 @@ def main():
             tui.log_info("Exited ArchSetup. Goodbye!")
             sys.exit(0)
 
+        pm.reset_operation()
         try:
             if choice == "full":
                 do_full(manifest_path, categories)
@@ -499,6 +487,8 @@ def main():
                 do_view_log()
             elif choice == "secureboot":
                 do_secureboot()
+        except (OSError, subprocess.SubprocessError) as exc:
+            tui.log_error(f"Operation failed: {exc}. Check {logger.log_path_str}")
         except KeyboardInterrupt:
             tui.console.print()
             tui.log_warning("Operation interrupted by user.")
@@ -507,4 +497,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    finally:
+        auth.stop_keepalive()

@@ -6,7 +6,7 @@ Installs software defined in packages.json with real-time progress indicators.
 import json
 from pathlib import Path
 from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn
-from core.tui import console, log_info, log_success, log_running
+from core.tui import console, log_info, log_success, log_running, log_error
 from core.pacman import pm
 from core.logger import logger
 
@@ -15,6 +15,11 @@ def install_package_batch(category_name: str, packages: list) -> bool:
     if not packages:
         return True
 
+    if not pm.prepare_transaction():
+        log_error("System upgrade failed; package installation stopped.")
+        return False
+
+    succeeded = True
     with Progress(
         SpinnerColumn(),
         TextColumn("[bold cyan]{task.fields[category]}"),
@@ -28,9 +33,10 @@ def install_package_batch(category_name: str, packages: list) -> bool:
         t_id = progress.add_task(packages[0], total=len(packages), category=category_name[:24])
         for pkg in packages:
             progress.update(t_id, description=pkg)
-            pm.install_package(pkg)
+            if not pm.install_package(pkg):
+                succeeded = False
             progress.update(t_id, advance=1)
-    return True
+    return succeeded
 
 def run(manifest_path: Path = None, auto_confirm: bool = False, target_category: str = None, categories_list: list = None) -> bool:
     if categories_list is not None:
@@ -43,6 +49,11 @@ def run(manifest_path: Path = None, auto_confirm: bool = False, target_category:
         log_info("packages.json not found; skipping package installation")
         return False
     
+    if not pm.prepare_transaction():
+        log_error("System upgrade failed; package installation stopped.")
+        return False
+
+    succeeded = True
     with Progress(
         SpinnerColumn(),
         TextColumn("[bold cyan]{task.fields[category]}"),
@@ -68,9 +79,13 @@ def run(manifest_path: Path = None, auto_confirm: bool = False, target_category:
             t_id = progress.add_task(pkgs[0], total=len(pkgs), category=cat_name[:24])
             for pkg in pkgs:
                 progress.update(t_id, description=pkg)
-                pm.install_package(pkg)
+                if not pm.install_package(pkg):
+                    succeeded = False
                 progress.update(t_id, advance=1)
                 
-    log_success("All selected package categories processed")
-    return True
+    if succeeded:
+        log_success("All selected package categories installed successfully")
+    else:
+        log_error("Some selected packages failed to install. Check the summary and log.")
+    return succeeded
 

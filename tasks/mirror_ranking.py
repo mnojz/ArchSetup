@@ -27,23 +27,27 @@ def run(auto_confirm: bool = False) -> bool:
     backup_file = Path(f"/etc/pacman.d/mirrorlist.backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
 
     if mirrorlist.exists():
-        logger.run_cmd(["sudo", "cp", str(mirrorlist), str(backup_file)], check=False)
+        code, _ = logger.run_cmd(["sudo", "cp", str(mirrorlist), str(backup_file)], check=False)
+        if code != 0:
+            log_warning("Mirrorlist backup failed; leaving the mirrorlist unchanged")
+            return False
 
     log_running("Benchmarking fastest Arch mirrors (this may take 15-30s)...")
-    with tempfile.NamedTemporaryFile(delete=False) as tmp_out:
-        tmp_path = tmp_out.name
-
-    code, _ = logger.run_cmd(["rate-mirrors", f"--save={tmp_path}", "arch"], check=False)
-    if code == 0 and Path(tmp_path).stat().st_size > 0:
-        logger.run_cmd(["sudo", "cp", tmp_path, str(mirrorlist)], check=False)
-        logger.run_cmd(["sudo", "pacman", "-Syy"], check=False)
-        log_success("Mirrorlist optimized and package databases synchronized")
-        Path(tmp_path).unlink(missing_ok=True)
-        return True
-    else:
-        log_warning("rate-mirrors failed or returned empty list; restoring original mirrorlist")
-        if backup_file.exists():
-            logger.run_cmd(["sudo", "cp", str(backup_file), str(mirrorlist)], check=False)
-        Path(tmp_path).unlink(missing_ok=True)
-        return False
-
+    with tempfile.TemporaryDirectory(prefix="archsetup-mirrors-") as tmp_dir:
+        tmp_path = Path(tmp_dir) / "mirrorlist"
+        code, _ = logger.run_cmd(["rate-mirrors", f"--save={tmp_path}", "arch"], check=False)
+        if code != 0 or not tmp_path.is_file() or tmp_path.stat().st_size == 0:
+            log_warning("rate-mirrors failed or returned an empty list; mirrorlist unchanged")
+            return False
+        code, _ = logger.run_cmd(["sudo", "cp", str(tmp_path), str(mirrorlist)], check=False)
+        if code != 0:
+            log_warning("Failed to install mirrorlist")
+            if backup_file.exists():
+                restore_code, _ = logger.run_cmd(["sudo", "cp", str(backup_file), str(mirrorlist)], check=False)
+                if restore_code != 0:
+                    log_warning(f"Mirrorlist recovery failed; restore {backup_file} manually")
+            return False
+    # Do not refresh databases independently of a full system upgrade.
+    pm.invalidate_transaction()
+    log_success("Mirrorlist optimized; package databases will refresh with the next full upgrade")
+    return True

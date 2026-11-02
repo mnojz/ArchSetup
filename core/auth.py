@@ -3,14 +3,15 @@ ArchSetup Privilege Elevation & Sudo Authentication Manager
 Provides in-TUI password prompting, background keepalive, and graceful failure handling.
 """
 
-import os
+import atexit
+import threading
 import sys
 import getpass
 import subprocess
-from typing import Optional
 from core import tui
 
-_keepalive_proc: Optional[subprocess.Popen] = None
+_keepalive_thread = None
+_keepalive_stop = threading.Event()
 
 def is_sudo_active() -> bool:
     """Checks if sudo credential timestamp is currently active and valid."""
@@ -25,19 +26,38 @@ def is_sudo_active() -> bool:
     except Exception:
         return False
 
+def _keepalive_loop():
+    while not _keepalive_stop.wait(50):
+        try:
+            result = subprocess.run(
+                ["sudo", "-n", "-v"], stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL, timeout=10, check=False,
+            )
+            if result.returncode != 0:
+                return
+        except (OSError, subprocess.TimeoutExpired):
+            return
+
+
 def start_keepalive():
-    """Starts background sudo keepalive if not already running."""
-    global _keepalive_proc
-    if _keepalive_proc and _keepalive_proc.poll() is None:
+    """Refresh credentials only while this Python process is alive."""
+    global _keepalive_thread
+    if _keepalive_thread and _keepalive_thread.is_alive():
         return
-    try:
-        _keepalive_proc = subprocess.Popen(
-            ["bash", "-c", "while true; do sudo -n true 2>/dev/null; sleep 50; kill -0 $$ 2>/dev/null || exit; done"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
-        )
-    except Exception:
-        pass
+    _keepalive_stop.clear()
+    _keepalive_thread = threading.Thread(target=_keepalive_loop, daemon=True)
+    _keepalive_thread.start()
+
+
+def stop_keepalive():
+    global _keepalive_thread
+    _keepalive_stop.set()
+    if _keepalive_thread:
+        _keepalive_thread.join(timeout=11)
+        _keepalive_thread = None
+
+
+atexit.register(stop_keepalive)
 
 def request_sudo_auth(action_name: str = "this operation", max_attempts: int = 3) -> bool:
     """
@@ -49,7 +69,7 @@ def request_sudo_auth(action_name: str = "this operation", max_attempts: int = 3
         start_keepalive()
         return True
 
-    user = os.environ.get("USER", os.getlogin() if hasattr(os, "getlogin") else "user")
+    user = getpass.getuser()
 
     from rich.panel import Panel
     from rich import box

@@ -5,7 +5,7 @@ Enables ParallelDownloads = 5, Color, and ILoveCandy progress bar.
 
 import re
 from pathlib import Path
-from core.tui import log_info, log_success, log_running
+from core.tui import log_info, log_success, log_running, log_error
 from core.logger import logger
 
 def run(auto_confirm: bool = False) -> bool:
@@ -42,15 +42,23 @@ def run(auto_confirm: bool = False) -> bool:
     if modified:
         log_running("Applying ParallelDownloads = 5 and Color enhancements...")
         # Backup original
-        logger.run_cmd(["sudo", "cp", "/etc/pacman.conf", "/etc/pacman.conf.backup"], check=False)
+        code, _ = logger.run_cmd(["sudo", "cp", "/etc/pacman.conf", "/etc/pacman.conf.backup"], check=False)
+        if code != 0:
+            log_error("Pacman configuration backup failed; configuration unchanged")
+            return False
         
         import tempfile
         with tempfile.NamedTemporaryFile("w", delete=False) as tf:
             tf.write(content)
             temp_path = tf.name
 
-        logger.run_cmd(["sudo", "cp", temp_path, "/etc/pacman.conf"], check=False)
-        Path(temp_path).unlink(missing_ok=True)
+        try:
+            code, _ = logger.run_cmd(["sudo", "cp", temp_path, "/etc/pacman.conf"], check=False)
+        finally:
+            Path(temp_path).unlink(missing_ok=True)
+        if code != 0:
+            log_error("Failed to write pacman configuration")
+            return False
         log_success("Pacman configuration optimized (ParallelDownloads=5, Color, ILoveCandy)")
     else:
         log_info("Pacman configuration already optimized")

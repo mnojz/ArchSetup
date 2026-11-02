@@ -4,26 +4,32 @@ local M = {}
 -- hardware.lua: Monitors, Inputs, Devices, Gestures, and Hardware Scripts
 -- ==============================================================================
 
+-- Personal hardware settings; keep connector/device names in one place.
+local INTERNAL_DISPLAY = "eDP-1"
+local EXTERNAL_DISPLAY = "HDMI-A-1"
+local TOUCHPAD_NAME = "elan0307:00-04f3:3282-touchpad"
+local MIN_DRAG_SIZE = 16
+
 ---- MONITORS ----
 hl.monitor({
-    output   = "eDP-1",
+    output   = INTERNAL_DISPLAY,
     mode     = "preferred",
     position = "auto",
     scale    = 1,
 })
 
 hl.monitor({
-    output   = "HDMI-A-1",
+    output   = EXTERNAL_DISPLAY,
     mode     = "preferred",
     position = "auto",
     scale    = 1,
-    mirror   = "eDP-1",
+    mirror   = INTERNAL_DISPLAY,
 })
 
 -- Direct in-memory monitor rotation (no circular hyprctl eval)
 function M.rotate(transform)
     hl.monitor({
-        output    = "eDP-1",
+        output    = INTERNAL_DISPLAY,
         transform = transform,
     })
 end
@@ -46,22 +52,31 @@ hl.config({
 })
 
 -- Touchpad device configuration
-local TOUCHPAD_NAME = "elan0307:00-04f3:3282-touchpad"
 local COLOR_ACCENT = "#95bcfb"   -- Catppuccin Sky Blue / Desktop Accent
+-- Reloading the config explicitly enables the device and resets this state.
 local touchpad_enabled = true
 
 hl.device({
     name          = TOUCHPAD_NAME,
+    enabled       = touchpad_enabled,
     accel_profile = "flat",
     sensitivity   = 0.5,
 })
 
+local function shell_quote(value)
+    return "'" .. value:gsub("'", [['"'"']]) .. "'"
+end
+
 -- Render custom SVG icon with dynamic accent color into RAM tmpfs
 local function prepare_touchpad_icon(enabled)
     local icon_file = enabled and "touchpad.svg" or "touchpad-disabled.svg"
-    local home = os.getenv("HOME") or "/home/manoj"
-    local template_path = home .. "/.config/hypr/icons/" .. icon_file
-    local runtime_dir = os.getenv("XDG_RUNTIME_DIR") or "/tmp"
+    local fallback = enabled and "input-touchpad-symbolic" or "touchpad-disabled-symbolic"
+    local home = os.getenv("HOME")
+    local config_dir = os.getenv("XDG_CONFIG_HOME") or (home and home .. "/.config")
+    local runtime_dir = os.getenv("XDG_RUNTIME_DIR")
+    -- Use themed icons when no private runtime directory is available.
+    if not config_dir or not runtime_dir or runtime_dir == "" then return fallback end
+    local template_path = config_dir .. "/hypr/icons/" .. icon_file
     local out_path = runtime_dir .. "/touchpad_" .. (enabled and "enabled" or "disabled") .. ".svg"
 
     local f = io.open(template_path, "r")
@@ -78,7 +93,7 @@ local function prepare_touchpad_icon(enabled)
             end
         end
     end
-    return enabled and "input-touchpad-symbolic" or "touchpad-disabled-symbolic"
+    return fallback
 end
 
 -- Touchpad toggle function
@@ -91,8 +106,8 @@ function M.touchpad_toggle()
     local status_text = touchpad_enabled and "enabled" or "disabled"
     local icon_path = prepare_touchpad_icon(touchpad_enabled)
     hl.exec_cmd(string.format(
-        "notify-send -a 'Device' -i '%s' -u low -t 2000 -h string:x-canonical-private-synchronous:touchpad 'Touchpad' '%s'",
-        icon_path, status_text
+        "notify-send -a 'Device' -i %s -u low -t 2000 -h string:x-canonical-private-synchronous:touchpad 'Touchpad' '%s'",
+        shell_quote(icon_path), status_text
     ))
 end
 
@@ -113,18 +128,26 @@ hl.gesture({ fingers = 3, direction = "horizontal", action = "workspace" })
 local start_x = 0
 local start_y = 0
 local start_monitor = nil
+local start_origin_x = 0
+local start_origin_y = 0
 local is_dragging = false
 local drag_timer = nil
 local cached_qs_id = nil
+local last_overlay_x = nil
+local last_overlay_y = nil
 
+-- Discover at most once per drag, including when Ambxst is unavailable.
+-- Bound this external lookup so an unresponsive qs cannot hang the compositor.
 local function get_qs_id()
-    if cached_qs_id then return cached_qs_id end
-    local p = io.popen("qs list --all 2>/dev/null | awk '/^Instance / { id=$2; sub(/:$/, \"\", id) } /^  Shell ID: ambxst$/ { print id; exit }'")
-    if p then
-        local id = p:read("*l")
-        p:close()
-        if id and id ~= "" then
-            cached_qs_id = id
+    local p = io.popen("timeout 0.2s qs list --all 2>/dev/null")
+    if not p then return nil end
+    local output = p:read("*a")
+    p:close()
+    local id = nil
+    for line in (output or ""):gmatch("[^\r\n]+") do
+        if line:match("^Instance ") then
+            id = line:match("^Instance ([^:]+):")
+        elseif line:match("^%s+Shell ID: ambxst%s*$") then
             return id
         end
     end
@@ -135,59 +158,86 @@ local function cursor_on_monitor()
     local cursor = hl.get_cursor_pos()
     local monitor = cursor and hl.get_monitor_at_cursor()
     if not cursor or not monitor then return nil end
-    return cursor, monitor, cursor.x - monitor.position.x, cursor.y - monitor.position.y
+    -- Use logical desktop coordinates consistently, including on scaled monitors.
+    return cursor, monitor,
+        math.floor(cursor.x - monitor.position.x + 0.5),
+        math.floor(cursor.y - monitor.position.y + 0.5)
 end
 
 local function overlay_ipc(action, args)
-    local id = get_qs_id()
-    if id then
-        hl.exec_cmd("qs ipc -i \"" .. id .. "\" call dragOverlay " .. action .. (args or ""))
+    if cached_qs_id then
+        hl.exec_cmd("qs ipc -i " .. shell_quote(cached_qs_id) .. " call dragOverlay " .. action .. (args or ""))
     end
+end
+
+local function on_start_monitor(monitor)
+    return monitor and monitor.name == start_monitor
+        and monitor.position.x == start_origin_x
+        and monitor.position.y == start_origin_y
+end
+
+-- Cancellation never creates a terminal, even if the mouse is released later.
+function M.dragCancel()
+    if not is_dragging then return end
+    is_dragging = false
+    if drag_timer then drag_timer:set_enabled(false) end
+    overlay_ipc("stop")
+    cached_qs_id = nil
+    start_monitor = nil
+    last_overlay_x = nil
+    last_overlay_y = nil
 end
 
 local function update_drag_overlay()
     if not is_dragging then return end
-    local _, _, x, y = cursor_on_monitor()
-    if not x or not y then return end
-    overlay_ipc("update", string.format(" %.0f %.0f", x, y))
+    local _, monitor, x, y = cursor_on_monitor()
+    -- Cancel before sending coordinates from a different monitor or layout.
+    if not on_start_monitor(monitor) then
+        M.dragCancel()
+        return
+    end
+    if not cached_qs_id or (x == last_overlay_x and y == last_overlay_y) then return end
+    last_overlay_x, last_overlay_y = x, y
+    overlay_ipc("update", string.format(" %d %d", x, y))
 end
 
 function M.dragStart()
+    M.dragCancel()
     local _, monitor, x, y = cursor_on_monitor()
-    if not monitor or not x or not y then return end
+    if not monitor or x == nil or y == nil then return end
 
-    cached_qs_id = nil -- refresh ID on new drag start
-    start_x = x
-    start_y = y
+    start_x, start_y = x, y
     start_monitor = monitor.name
+    start_origin_x, start_origin_y = monitor.position.x, monitor.position.y
     is_dragging = true
+    cached_qs_id = get_qs_id()
+    last_overlay_x, last_overlay_y = x, y
+    overlay_ipc("start", string.format(" %d %d", x, y))
 
-    overlay_ipc("start", string.format(" %.0f %.0f", start_x, start_y))
-
+    -- Reuse one timer; it also watches monitor boundaries without an overlay.
     if drag_timer then
-        drag_timer:set_enabled(false)
+        drag_timer:set_enabled(true)
+    else
+        drag_timer = hl.timer(update_drag_overlay, { timeout = 16, type = "repeat" })
     end
-    drag_timer = hl.timer(update_drag_overlay, { timeout = 16, type = "repeat" })
 end
 
+-- Called only by the mouse-release binding in keybinds.lua.
 function M.dragEnd()
     if not is_dragging then return end
-    is_dragging = false
-
-    if drag_timer then
-        drag_timer:set_enabled(false)
-        drag_timer = nil
-    end
-
-    overlay_ipc("stop")
-
     local _, monitor, cursor_x, cursor_y = cursor_on_monitor()
-    if not monitor or monitor.name ~= start_monitor then return end
+    if not on_start_monitor(monitor) then
+        M.dragCancel()
+        return
+    end
 
     local x = math.min(start_x, cursor_x)
     local y = math.min(start_y, cursor_y)
-    local w = math.max(1, math.abs(start_x - cursor_x))
-    local h = math.max(1, math.abs(start_y - cursor_y))
+    local w = math.abs(start_x - cursor_x)
+    local h = math.abs(start_y - cursor_y)
+    M.dragCancel()
+    -- Ignore clicks and thin selections rather than launch unusable windows.
+    if w < MIN_DRAG_SIZE or h < MIN_DRAG_SIZE then return end
 
     hl.dispatch(
         hl.dsp.exec_cmd(
@@ -201,11 +251,13 @@ function M.dragEnd()
     )
 end
 
--- End drag on any key release
+-- Releasing any keyboard key before the mouse cancels this drag.
 hl.on("input.keyboard.key", function(_, _, state)
-    if state ~= 0 or not is_dragging then return end
-    M.dragEnd()
+    if state == 0 then M.dragCancel() end
 end)
 
-return M
+-- Hide the external overlay when the Lua configuration is reloaded or exits.
+hl.on("config.reloaded", M.dragCancel)
+hl.on("hyprland.shutdown", M.dragCancel)
 
+return M

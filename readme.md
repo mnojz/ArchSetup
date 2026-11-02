@@ -88,11 +88,13 @@ Use `Space` to toggle individual categories, `a` to toggle all, and `Enter` to i
 - **Local Manifest Overrides (`packages.local.json`)**: Add personal software packages or custom categories without dirtying git tracking.
 - **Hybrid Package Router**: Checks official sync databases first, with seamless fallback to AUR (`yay`/`paru`).
 - **In-Memory Cache Scanning**: Inspects installed packages in under 0.05 seconds via `pacman -Qq`.
-- **Zero-Crash Safety Engineering**:
-  - Automatically preserves disk encryption (`encrypt`/`sd-encrypt`) and LVM hooks in `mkinitcpio.conf`.
+- **Installation Safety**:
+  - Backs up and preserves the complete installed `mkinitcpio.conf`, including custom storage hooks, modules, and files.
   - Non-blocking flags (`--answerclean None --answerdiff None`) prevent background AUR build hangs.
   - Active display server protection prevents compositor shutdowns while running under Wayland/X11.
-  - Background sudo keepalive loop ensures credentials do not expire during long compilation steps.
+  - A process-bound sudo keepalive refreshes credentials during long compilation steps and stops on exit.
+  - Package installation requires a successful full system upgrade; mirror ranking does not refresh databases independently.
+  - Failed installation phases stop dependent steps and suppress the final reboot prompt.
 
 ---
 
@@ -122,7 +124,7 @@ ArchSetup was audited and tested specifically to prevent common post-install fai
 
 > [!IMPORTANT]
 > **Disk Encryption (LUKS) Preservation**  
-> If your Arch install uses full disk encryption (`encrypt` / `sd-encrypt`) or LVM, replacing `mkinitcpio.conf` blindly causes an unbootable system. ArchSetup automatically detects active encryption hooks in `/etc/mkinitcpio.conf` and preserves them when rebuilding initramfs.
+> If your Arch install uses full disk encryption (`encrypt` / `sd-encrypt`) or LVM, replacing `mkinitcpio.conf` blindly causes an unbootable system. ArchSetup backs up `/etc/mkinitcpio.conf` and rebuilds initramfs using that existing configuration without replacing it with the bundled template. A missing configuration, failed backup, or failed rebuild stops system configuration. Fix any rebuild error and successfully run `sudo mkinitcpio -P` before rebooting.
 
 > [!NOTE]
 > **Non-Interactive AUR Builds**  
@@ -230,6 +232,6 @@ ArchSetup automatically detects and merges `packages.local.json` at runtime duri
 Distributed under the **MIT License**. See the repository root for details.
 
 - Designed with ❤️ for **Arch Linux** and **Hyprland**.
-- Dotfiles: Bundled in `dotfiles/` module (managed via GNU Stow)
+- Dotfiles: Bundled in `dotfiles/` and deployed via GNU Stow. Repository configs replace conflicting local files and links without creating backups. Deployment stops and reports the failing package if linking fails.
 - SDDM Theme: [`uiriansan/SilentSDDM`](https://github.com/uiriansan/SilentSDDM)
 - TUI powered by [Textualize/rich](https://github.com/Textualize/rich).

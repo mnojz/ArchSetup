@@ -14,6 +14,7 @@ class PackageManager:
         self.success_packages: List[str] = []
         self.skipped_packages: List[str] = []
         self.failed_packages: List[str] = []
+        self._upgrade_ready = False
         self._refresh_installed_cache()
 
     def _refresh_installed_cache(self):
@@ -29,6 +30,31 @@ class PackageManager:
                 self._installed_cache = set(res.stdout.strip().splitlines())
         except Exception:
             self._installed_cache = set()
+
+    def reset_operation(self):
+        """Start a new menu operation with fresh results and package state."""
+        self.success_packages.clear()
+        self.skipped_packages.clear()
+        self.failed_packages.clear()
+        self._upgrade_ready = False
+        self._refresh_installed_cache()
+
+    def invalidate_transaction(self):
+        """Require another full upgrade after repository settings change."""
+        self._upgrade_ready = False
+
+    def prepare_transaction(self) -> bool:
+        """Complete a full upgrade before any selective package installation."""
+        if self._upgrade_ready:
+            return True
+        from core.tui import log_running
+        log_running("Completing a full system upgrade before installing packages...")
+        code, _ = logger.run_cmd(
+            ["sudo", "pacman", "-Syu", "--noconfirm"], check=False
+        )
+        self._refresh_installed_cache()
+        self._upgrade_ready = code == 0
+        return self._upgrade_ready
 
     def is_installed(self, pkg: str) -> bool:
         return pkg in self._installed_cache
@@ -54,6 +80,11 @@ class PackageManager:
             self.skipped_packages.append(pkg)
             return True
 
+        if not self.prepare_transaction():
+            logger.log("PKG_FAIL", f"System upgrade failed; refusing to install {pkg}")
+            self.failed_packages.append(pkg)
+            return False
+
         # Try official pacman first
         if self.in_official_repo(pkg):
             logger.log("PKG", f"Installing {pkg} via pacman")
@@ -65,6 +96,10 @@ class PackageManager:
                 self._installed_cache.add(pkg)
                 self.success_packages.append(pkg)
                 return True
+
+            # An official package install failure is not evidence of an AUR package.
+            self.failed_packages.append(pkg)
+            return False
 
         # Fall back to AUR helper
         aur_tool = self.get_aur_helper()

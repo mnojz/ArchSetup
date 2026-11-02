@@ -40,3 +40,4 @@ x-scheme-handler/https=brave-origin.desktop
 x-scheme-handler/stremio=harbor-handler.desktop
 x-scheme-handler/unknown=brave-origin.desktop
 x-scheme-handler/ytd=ytd-handler.desktop
+x-scheme-handler/claude-cli=claude-code-url-handler.desktop

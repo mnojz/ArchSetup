@@ -23,9 +23,9 @@ main() {
         if ! command -v git &>/dev/null; then
             echo -e "\e[36m[INFO]\e[0m Installing git and bootstrap dependencies..."
             if [[ -r /dev/tty ]]; then
-                sudo pacman -Sy --needed --noconfirm git python python-rich base-devel < /dev/tty
+                sudo pacman -Syu --needed --noconfirm git python python-rich base-devel < /dev/tty
             else
-                sudo pacman -Sy --needed --noconfirm git python python-rich base-devel
+                sudo pacman -Syu --needed --noconfirm git python python-rich base-devel
             fi
         fi
 
@@ -56,9 +56,9 @@ main() {
     if [[ ${#BOOTSTRAP_PKGS[@]} -gt 0 ]]; then
         echo -e "\e[36m[INFO]\e[0m Initializing pacman databases and installing bootstrap tools: ${BOOTSTRAP_PKGS[*]}..."
         if [[ -r /dev/tty ]]; then
-            sudo pacman -Sy --needed --noconfirm "${BOOTSTRAP_PKGS[@]}" < /dev/tty
+            sudo pacman -Syu --needed --noconfirm "${BOOTSTRAP_PKGS[@]}" < /dev/tty
         else
-            sudo pacman -Sy --needed --noconfirm "${BOOTSTRAP_PKGS[@]}"
+            sudo pacman -Syu --needed --noconfirm "${BOOTSTRAP_PKGS[@]}"
         fi
     fi
 

@@ -176,6 +176,23 @@ def log_running(msg: str):
 def log_dim(msg: str):
     console.print(f"      [dim]{msg}[/]")
 
+def show_dotfiles_summary(results, replaced: int, removed_legacy: int, log_file: str):
+    """Show each deployment outcome, including packages skipped after a failure."""
+    table = Table(
+        title="[bold cyan]Dotfiles Deployment[/]", box=box.ROUNDED,
+        border_style="cyan", header_style="bold cyan", width=get_terminal_width(),
+    )
+    table.add_column("Configuration", style="white")
+    table.add_column("Result", width=12)
+    styles = {"Linked": "green", "Failed": "red", "Skipped": "yellow"}
+    for name, status in results:
+        table.add_row(Text(name), Text(status, style=styles[status]))
+    console.print(table)
+    console.print(f"  Replaced conflicts: {replaced} • Removed broken legacy links: {removed_legacy}")
+    if any(status == "Failed" for _, status in results):
+        console.print(Text(f"  Details: {log_file}", style="dim"))
+
+
 def show_summary_panel(
     installed: List[str],
     skipped: List[str],
@@ -185,7 +202,7 @@ def show_summary_panel(
     """Renders the final completion summary card."""
     width = get_terminal_width()
     lines = [
-        "[bold green]🎉 Post-Installation Tasks Completed Successfully![/]\n",
+        "[bold cyan]Package Installation Results[/]\n",
         f"  [bold]Newly Installed:[/]      [green]{len(installed)} packages[/]",
         f"  [bold]Previously Installed:[/] [cyan]{len(skipped)} packages[/]",
     ]
@@ -199,7 +216,7 @@ def show_summary_panel(
 
     panel = Panel(
         "\n".join(lines),
-        title="[bold green]Execution Summary[/]",
+        title="[bold cyan]Execution Summary[/]",
         box=box.ROUNDED,
         border_style="green",
         width=width,
