@@ -9,6 +9,7 @@ local INTERNAL_DISPLAY = "eDP-1"
 local EXTERNAL_DISPLAY = "HDMI-A-1"
 local TOUCHPAD_NAME = "elan0307:00-04f3:3282-touchpad"
 local MIN_DRAG_SIZE = 16
+local DRAG_TERMINAL_PREFIX = "archsetup-drag-terminal-"
 
 ---- MONITORS ----
 hl.monitor({
@@ -135,6 +136,27 @@ local drag_timer = nil
 local cached_qs_id = nil
 local last_overlay_x = nil
 local last_overlay_y = nil
+local cursor_visibility_before_drag = nil
+local pending_terminal = nil
+local spawn_timeout = nil
+local launch_number = 0
+
+local function hide_native_cursor()
+    -- The overlay draws the crosshair because an application can retain cursor
+    -- ownership during a held-button drag (for example an editor's I-beam).
+    -- Leave the pointer alone when there is no overlay to draw its replacement.
+    if not cached_qs_id then return end
+    local invisible, err = hl.get_config("cursor.invisible")
+    if err or type(invisible) ~= "boolean" then return end
+    cursor_visibility_before_drag = invisible
+    hl.config({ cursor = { invisible = true } })
+end
+
+local function restore_native_cursor()
+    if cursor_visibility_before_drag == nil then return end
+    hl.config({ cursor = { invisible = cursor_visibility_before_drag } })
+    cursor_visibility_before_drag = nil
+end
 
 -- Discover at most once per drag, including when Ambxst is unavailable.
 -- Bound this external lookup so an unresponsive qs cannot hang the compositor.
@@ -178,9 +200,15 @@ end
 
 -- Cancellation never creates a terminal, even if the mouse is released later.
 function M.dragCancel()
-    if not is_dragging then return end
+    if not is_dragging and not pending_terminal then return end
     is_dragging = false
+    pending_terminal = nil
     if drag_timer then drag_timer:set_enabled(false) end
+    if spawn_timeout then
+        spawn_timeout:set_enabled(false)
+        spawn_timeout = nil
+    end
+    restore_native_cursor()
     overlay_ipc("stop")
     cached_qs_id = nil
     start_monitor = nil
@@ -213,6 +241,7 @@ function M.dragStart()
     cached_qs_id = get_qs_id()
     last_overlay_x, last_overlay_y = x, y
     overlay_ipc("start", string.format(" %d %d", x, y))
+    hide_native_cursor()
 
     -- Reuse one timer; it also watches monitor boundaries without an overlay.
     if drag_timer then
@@ -235,25 +264,65 @@ function M.dragEnd()
     local y = math.min(start_y, cursor_y)
     local w = math.abs(start_x - cursor_x)
     local h = math.abs(start_y - cursor_y)
-    M.dragCancel()
     -- Ignore clicks and thin selections rather than launch unusable windows.
-    if w < MIN_DRAG_SIZE or h < MIN_DRAG_SIZE then return end
+    if w < MIN_DRAG_SIZE or h < MIN_DRAG_SIZE then
+        M.dragCancel()
+        return
+    end
 
-    hl.dispatch(
+    -- Use the release position for both the final rectangle and the window;
+    -- the last timer update can be one frame behind a fast mouse movement.
+    overlay_ipc("update", string.format(" %d %d", cursor_x, cursor_y))
+
+    -- Finish selection, but keep the rectangle until the replacement window
+    -- maps. Keyboard releases after the mouse no longer cancel this handoff.
+    is_dragging = false
+    if drag_timer then drag_timer:set_enabled(false) end
+    launch_number = launch_number + 1
+    local terminal_class = DRAG_TERMINAL_PREFIX .. os.time() .. "-" .. launch_number
+    pending_terminal = terminal_class
+    spawn_timeout = hl.timer(function()
+        if pending_terminal == terminal_class then M.dragCancel() end
+    end, { timeout = 3000, type = "oneshot" })
+
+    local result = hl.dispatch(
         hl.dsp.exec_cmd(
-            "kitty",
+            "kitty --class " .. terminal_class,
             {
                 float = true,
                 move  = { x, y },
                 size  = { w, h },
+                no_anim   = true,
             }
         )
     )
+    if result and result.ok == false then
+        M.dragCancel()
+        error(result.error or "Could not launch drag-selected terminal")
+    end
 end
+
+hl.on("window.open", function(window)
+    if window.initial_class:sub(1, #DRAG_TERMINAL_PREFIX) ~= DRAG_TERMINAL_PREFIX then return end
+    if window.initial_class == pending_terminal then M.dragCancel() end
+
+    -- Let the first frame render at full opacity and final geometry before
+    -- returning this terminal to the desktop's normal animation rules.
+    local address = window.address
+    hl.timer(function()
+        local current = hl.get_window("address:" .. address)
+        if current then
+            hl.dispatch(hl.dsp.window.set_prop({ window = current, prop = "no_anim", value = "0" }))
+            hl.dispatch(hl.dsp.window.set_prop({
+                window = current, prop = "no_wobble", value = current.floating and "0" or "1",
+            }))
+        end
+    end, { timeout = 100, type = "oneshot" })
+end)
 
 -- Releasing any keyboard key before the mouse cancels this drag.
 hl.on("input.keyboard.key", function(_, _, state)
-    if state == 0 then M.dragCancel() end
+    if state == 0 and is_dragging then M.dragCancel() end
 end)
 
 -- Hide the external overlay when the Lua configuration is reloaded or exits.

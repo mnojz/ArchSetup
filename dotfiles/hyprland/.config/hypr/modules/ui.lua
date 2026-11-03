@@ -54,8 +54,8 @@ hl.config({
         force_default_wallpaper      = 0,
         disable_hyprland_logo        = true,
         vrr                          = 1,
-        animate_manual_resizes       = false,
-        animate_mouse_windowdragging = false,
+        animate_manual_resizes       = true,
+        animate_mouse_windowdragging = true,
     },
 
     animations = {
@@ -74,14 +74,15 @@ hl.curve("easy",           { type = "spring", mass = 1, stiffness = 71.2633, dam
 hl.curve("snappySpring",   { type = "spring", mass = 1, stiffness = 160, dampening = 22 })
 
 ---- ANIMATIONS ----
-hl.animation({ leaf = "global",         enabled = true,  speed = 10,   bezier = "default" })
-hl.animation({ leaf = "border",         enabled = false, speed = 1,    bezier = "linear" })
-hl.animation({ leaf = "windows",        enabled = false, speed = 1,    bezier = "linear" })
-hl.animation({ leaf = "windowsIn",      enabled = false, speed = 1,    bezier = "linear" })
-hl.animation({ leaf = "windowsMove",    enabled = false, speed = 1,    bezier = "linear" })
-hl.animation({ leaf = "windowsOut",     enabled = false, speed = 1,    bezier = "linear" })
-hl.animation({ leaf = "fadeIn",         enabled = false, speed = 1,    bezier = "almostLinear" })
-hl.animation({ leaf = "fadeOut",        enabled = false, speed = 1,    bezier = "almostLinear" })
+hl.animation({ leaf = "global",         enabled = true,  speed = 4,    bezier = "easeOutQuint" })
+hl.animation({ leaf = "border",         enabled = true,  speed = 5,    bezier = "linear" })
+hl.animation({ leaf = "windows",        enabled = true,  speed = 4,    bezier = "easeOutQuint" })
+-- Keep tiled layout changes and entering/leaving windows on the same curve.
+hl.animation({ leaf = "windowsIn",      enabled = true,  speed = 4,    bezier = "easeOutQuint", style = "slide" })
+hl.animation({ leaf = "windowsMove",    enabled = true,  speed = 4,    bezier = "easeOutQuint" })
+hl.animation({ leaf = "windowsOut",     enabled = true,  speed = 4,    bezier = "easeOutQuint", style = "slide" })
+hl.animation({ leaf = "fadeIn",         enabled = false, speed = 2,    bezier = "almostLinear" })
+hl.animation({ leaf = "fadeOut",        enabled = false, speed = 2,    bezier = "almostLinear" })
 hl.animation({ leaf = "fade",           enabled = true,  speed = 3.03, bezier = "quick" })
 hl.animation({ leaf = "layers",         enabled = true,  speed = 3.81, bezier = "easeOutQuint" })
 hl.animation({ leaf = "layersIn",       enabled = true,  speed = 4,    bezier = "easeOutQuint", style = "fade" })
@@ -92,6 +93,28 @@ hl.animation({ leaf = "workspaces",     enabled = true,  speed = 3.5,  bezier = 
 hl.animation({ leaf = "zoomFactor",     enabled = true,  speed = 7,    bezier = "quick" })
 
 ---- WINDOW RULES ----
+-- Tiled neighbors should keep straight edges while the layout makes room.
+-- Floating windows continue to use the global wobble effect.
+hl.window_rule({
+    name      = "no-wobble-for-tiled-windows",
+    match     = { float = false },
+    no_wobble = true,
+})
+
+hl.window_rule({
+    name      = "wobble-for-floating-windows",
+    match     = { float = true },
+    no_wobble = false,
+})
+
+-- Suppress deformation only during the first frames of a selected terminal.
+-- hardware.lua releases this override after the window has appeared.
+hl.window_rule({
+    name      = "drag-terminal-opening-wobble",
+    match     = { class = "^archsetup-drag-terminal-.*$" },
+    no_wobble = true,
+})
+
 hl.window_rule({
     name           = "suppress-maximize-events",
     match          = { class = ".*" },
@@ -195,6 +218,30 @@ hl.window_rule({
     center = true,
     float  = true,
 })
+
+-- Keep the floating-only policy when an existing window is tiled or floated.
+-- Remember state before setting a property: that update can emit rules again.
+local window_floating_states = {}
+local function update_window_wobble(window, opening)
+    local address, floating = window.address, window.floating
+    if window_floating_states[address] == floating then return end
+    window_floating_states[address] = floating
+    if opening and window.initial_class:sub(1, #"archsetup-drag-terminal-") == "archsetup-drag-terminal-" then
+        return -- hardware.lua releases this window's opening override.
+    end
+    hl.dispatch(hl.dsp.window.set_prop({
+        window = window, prop = "no_wobble", value = floating and "0" or "1",
+    }))
+end
+
+hl.on("window.open", function(window) update_window_wobble(window, true) end)
+hl.on("window.update_rules", function(window)
+    if window_floating_states[window.address] ~= nil then update_window_wobble(window, false) end
+end)
+hl.on("window.close", function(window) window_floating_states[window.address] = nil end)
+hl.on("config.reloaded", function()
+    for _, window in ipairs(hl.get_windows()) do update_window_wobble(window, false) end
+end)
 
 ---- LAYER RULES ----
 hl.layer_rule({

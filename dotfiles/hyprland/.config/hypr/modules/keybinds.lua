@@ -94,7 +94,9 @@ hl.bind(mainMod .. " + CTRL + F24", hardware.touchpad_toggle)
 
 -- Selection drag to spawn terminal
 hl.bind(mainMod .. " + ALT + mouse:272", hardware.dragStart)
-hl.bind(mainMod .. " + ALT + mouse:272", hardware.dragEnd, { release = true })
+-- The press binding consumes the click. Keep its release binding from being
+-- shadowed so mouse-first release can finish before keyboard cancellation.
+hl.bind(mainMod .. " + ALT + mouse:272", hardware.dragEnd, { release = true, transparent = true })
 
 -- Display refresh rate toggle
 hl.bind("XF86Tools", power.toggle)
